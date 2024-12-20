@@ -6,12 +6,55 @@ import {
   Users,
   Star,
 } from "lucide-react";
+import RevenueReportPage from "../pages/RevenueReportPage";
+import WarehouseReportPage from "../pages/WarehouseReportPage";
+import ProductPage from "../pages/ProductPage";
+import InvoicePage from "../pages/InvoicePage";
+import CustomerPage from "../pages/CustomerPage";
+import StaffPage from "../pages/StaffPage";
+import PurchaseOrderPage from "../pages/PurchaseOrderPage";
 
 export const navigation = [
-  // {
-  //   title: "Báo cáo",
-  //   route: "/report",
-  //   icon: BarChart2,
-  //   element: ReportPage,
-  // },
+  {
+    title: "Revenue report",
+    route: "/revenue-report",
+    icon: BarChart2,
+    element: RevenueReportPage,
+  },
+  {
+    title: "Warehouse report",
+    route: "/warehouse-report",
+    icon: Package,
+    element: WarehouseReportPage,
+  },
+  {
+    title: "Invoice",
+    route: "/invoice",
+    icon: Percent,
+    element: InvoicePage,
+  },
+  {
+    title: "Product",
+    route: "/product",
+    icon: ShoppingCart,
+    element: ProductPage,
+  },
+  {
+    title: "Staff",
+    route: "/staff",
+    icon: Users,
+    element: StaffPage,
+  },
+  {
+    title: "Customer",
+    route: "/customer",
+    icon: Star,
+    element: CustomerPage,
+  },
+  {
+    title: "PurchaseOrder",
+    route: "/purchase-order",
+    icon: ShoppingCart,
+    element: PurchaseOrderPage,
+  },
 ];

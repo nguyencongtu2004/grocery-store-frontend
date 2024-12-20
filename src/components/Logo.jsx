@@ -14,7 +14,7 @@ export default function Logo({ className }) {
       <Row className={cn("items-center gap-2", className)}>
         <img className="w-16 h-16" src={logo} alt="logo" />
         <div className="text-center text-[#42b28f] text-4xl font-semibold leading-normal">
-          Tạp hóa
+          Grocery Store
         </div>
       </Row>
     </Link>
