@@ -9,4 +9,8 @@ export const api = {
     update: () => `/user/${getUserId()}`,
     getInfor: () => `/user/infor`,
   },
+  employee: {
+    getAll: ({ page, itemsPerPage }) => `/employees?page=${page}&limit=${itemsPerPage}`,
+    getDetail: ({ id, page, itemsPerPage }) => `/employees/${id}?page=${page}&limit=${itemsPerPage}`,
+  },
 };
