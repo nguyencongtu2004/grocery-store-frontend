@@ -28,7 +28,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
       <ModalContent>
         <form onSubmit={handleSubmit}>
           <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-bold">Thêm nhân viên</h2>
+            <h2 className="text-xl font-bold">Add Employee</h2>
           </ModalHeader>
           <ModalBody>
             <div className="grid gap-4">
@@ -43,7 +43,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
               />
               <Input
                 name="password"
-                label="Mật khẩu"
+                label="Password"
                 placeholder="123456"
                 type="password"
                 variant="bordered"
@@ -53,7 +53,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   name="name"
-                  label="Tên"
+                  label="Name"
                   placeholder="Công Tú"
                   variant="bordered"
                   startContent={<User size={18} />}
@@ -61,7 +61,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
                 />
                 <Input
                   name="role"
-                  label="Chức vụ"
+                  label="Role"
                   placeholder="Nhân viên kho"
                   variant="bordered"
                   startContent={<Briefcase size={18} />}
@@ -71,7 +71,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   name="phone"
-                  label="Số điện thoại"
+                  label="Phone"
                   placeholder="0123456789"
                   variant="bordered"
                   startContent={<Phone size={18} />}
@@ -79,7 +79,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
                 />
                 <Input
                   name="address"
-                  label="Địa chỉ"
+                  label="Address"
                   placeholder="123, đường 456"
                   variant="bordered"
                   startContent={<MapPin size={18} />}
@@ -90,10 +90,10 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
           </ModalBody>
           <ModalFooter>
             <Button color="danger" variant="light" onPress={onClose}>
-              Hủy
+              Cancel
             </Button>
             <Button color="primary" type="submit">
-              Thêm nhân viên
+              Add Employee
             </Button>
           </ModalFooter>
         </form>
