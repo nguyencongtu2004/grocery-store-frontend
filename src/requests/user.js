@@ -4,14 +4,14 @@ import { setAuthToken, setUserId } from "../ultis/auth.js";
 
 export async function fetchUser({ signal }) {
   const response = await httpRequest.get({
-    url: api.user.getById(),
+    url: api.user.getInfor(),
     signal,
   });
   if (response.data.user.id) setUserId(response.data.user.id);
   return response;
 }
 
-export async function updateUser({user, signal}) {
+export async function updateUser({ user, signal }) {
   httpRequest.putWithFiles({
     url: api.user.update(),
     data: user,
@@ -25,14 +25,15 @@ export async function loginUser({ data, signal }) {
     data,
     signal,
   });
-
-  if (response.data.token) setAuthToken(response.data.token);
-  if (response.data.user.id) setUserId(response.data.user.id);
+  if (response.status === 200) {
+    if (response.data.token) setAuthToken(response.data.token);
+    if (response.data.user.id) setUserId(response.data.user.id);
+  }
 
   return response;
 }
 
-export async function registerUser({data, signal}) {
+export async function registerUser({ data, signal }) {
   return await httpRequest.post({
     url: api.auth.register(),
     data,

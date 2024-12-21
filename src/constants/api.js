@@ -7,6 +7,6 @@ export const api = {
   },
   user: {
     update: () => `/user/${getUserId()}`,
-    getById: () => `/user/${getUserId()}`,
+    getInfor: () => `/user/infor`,
   },
 };

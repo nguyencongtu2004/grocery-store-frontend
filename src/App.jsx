@@ -1,6 +1,6 @@
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import LoginPage from "./pages/auth/LoginPage.jsx";
-import RegisterPage from "./pages/auth/RegisterPage.jsx";
+//import RegisterPage from "./pages/auth/RegisterPage.jsx";
 import RootPage from "./pages/RootPage.jsx";
 import ErrorPage from "./pages/ErrorPage.jsx";
 import { rootLoader } from "./ultis/loader.js";
@@ -11,10 +11,10 @@ const router = createBrowserRouter([
     path: "/login",
     element: <LoginPage />,
   },
-  {
-    path: "/register",
-    element: <RegisterPage />,
-  },
+  // {
+  //   path: "/register",
+  //   element: <RegisterPage />,
+  // },
   {
     path: "/",
     id: "root",
