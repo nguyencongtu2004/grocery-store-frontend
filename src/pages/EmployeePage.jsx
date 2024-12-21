@@ -4,10 +4,12 @@ import PageTitle from "../components/PageTitle";
 import { fetchEmployee } from "../requests/employee";
 import { Link, Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
+import AddEmployeeModal from "../components/employee/AddEmployeeModal";
 
 export default function EmployeePage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const itemsPerPage = 10;
 
   const { data, isLoading } = useQuery({
@@ -85,7 +87,7 @@ export default function EmployeePage() {
   }
 
   function handleAddEmployee() {
-    alert("Add new Employee");
+    setIsAddModalOpen(true);
   }
 
   return (
@@ -117,6 +119,10 @@ export default function EmployeePage() {
             </div>
           ) : null
         }
+      />
+      <AddEmployeeModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
       />
     </div>
   );
