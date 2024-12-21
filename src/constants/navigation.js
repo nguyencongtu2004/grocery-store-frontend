@@ -11,7 +11,7 @@ import WarehouseReportPage from "../pages/WarehouseReportPage";
 import ProductPage from "../pages/ProductPage";
 import InvoicePage from "../pages/InvoicePage";
 import CustomerPage from "../pages/CustomerPage";
-import StaffPage from "../pages/StaffPage";
+import Employee from "../pages/EmployeePage";
 import PurchaseOrderPage from "../pages/PurchaseOrderPage";
 
 export const navigation = [
@@ -40,10 +40,10 @@ export const navigation = [
     element: ProductPage,
   },
   {
-    title: "Staff",
-    route: "/staff",
+    title: "Employee",
+    route: "/employee",
     icon: Users,
-    element: StaffPage,
+    element: Employee,
   },
   {
     title: "Customer",
