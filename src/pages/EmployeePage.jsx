@@ -37,7 +37,7 @@ export default function EmployeePage() {
     {
       key: "_id",
       label: "STT",
-      render: (_, index) => (page - 1) * itemsPerPage + index + 1,
+      render: (employee) => (page - 1) * itemsPerPage + (employees.indexOf(employee) + 1),
       align: "center"
     },
     {

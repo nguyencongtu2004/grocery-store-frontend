@@ -51,6 +51,7 @@ export function ActionCell({
   onView,
   onEdit,
   onDelete,
+  hideDelete = false
 }) {
   return (
     <div className="relative flex items-center gap-2">
@@ -68,7 +69,7 @@ export function ActionCell({
           </span>
         </Tooltip>
       )}
-      {onDelete && (
+      {onDelete && !hideDelete && (
         <Tooltip color="danger" content="Delete">
           <span className="text-lg text-danger cursor-pointer active:opacity-50">
             <Trash2 size={20} onClick={onDelete} />
@@ -79,16 +80,17 @@ export function ActionCell({
   );
 }
 
+ActionCell.propTypes = {
+  onView: PropTypes.func,
+  onEdit: PropTypes.func,
+  onDelete: PropTypes.func,
+  hideDelete: PropTypes.bool
+};
+
 DataTable.propTypes = {
   data: PropTypes.array.isRequired,
   columns: PropTypes.array.isRequired,
   isLoading: PropTypes.bool,
   emptyContent: PropTypes.node,
   bottomContent: PropTypes.node,
-};
-
-ActionCell.propTypes = {
-  onView: PropTypes.func,
-  onEdit: PropTypes.func,
-  onDelete: PropTypes.func,
 };

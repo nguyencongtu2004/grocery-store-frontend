@@ -16,6 +16,13 @@ export const api = {
     getAll: ({ page, itemsPerPage }) => `/employees?page=${page}&limit=${itemsPerPage}`,
     getOneById: ({ id }) => `/employees/${id}`,
   },
+  customer: {
+    getAll: ({ page, itemsPerPage, keyword }) => `/customers?page=${page}&limit=${itemsPerPage}&keyword=${keyword ?? ""}`,
+    create: () => `/customers`,
+    update: ({ id }) => `/customers/${id}`,
+    getOneById: ({ id }) => `/customers/${id}`,
+    delete: ({ id }) => `/customers/${id}`
+  },
   invoice: {
     getAll: ({ page, itemsPerPage }) => `/invoices?page=${page}&limit=${itemsPerPage}`,
     getOneById: ({ id, page, itemsPerPage }) => `/invoices/${id}?page=${page}&limit=${itemsPerPage}`,
