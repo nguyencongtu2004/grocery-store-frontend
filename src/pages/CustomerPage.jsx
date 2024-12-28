@@ -1,14 +1,13 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PageTitle from "../components/PageTitle";
+import SearchInput from "../components/SearchInput";
 import { fetchCustomers } from "../requests/customer";
 import { Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import AddCustomerModal from "../components/customer/AddCustomerModal";
 import EditCustomerModal from "../components/customer/EditCustomerModal";
 import CustomerDetailModal from "../components/customer/CustomerDetailModal";
-import { Input, Button } from "@nextui-org/react";
-import { SearchIcon } from "lucide-react";
 
 export default function CustomerPage() {
   const [page, setPage] = useState(1);
@@ -23,11 +22,11 @@ export default function CustomerPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["customer", page, itemsPerPage, debouncedKeyword],
-    queryFn: ({ signal }) => fetchCustomers({ 
-      signal, 
-      page, 
-      itemsPerPage, 
-      keyword: debouncedKeyword 
+    queryFn: ({ signal }) => fetchCustomers({
+      signal,
+      page,
+      itemsPerPage,
+      keyword: debouncedKeyword
     }),
   });
 
@@ -134,48 +133,13 @@ export default function CustomerPage() {
         isLoading={isLoading}
       />
 
-      <div className="flex gap-4 mb-4">
-        <Input
-          isClearable
-          radius="lg"
-          classNames={{
-            label: "text-black/50 dark:text-white/90",
-            input: [
-              "bg-transparent",
-              "text-black/90 dark:text-white/90",
-              "placeholder:text-default-700/50 dark:placeholder:text-white/60",
-            ],
-            innerWrapper: "bg-transparent",
-            inputWrapper: [
-              "bg-default-200/50",
-              "dark:bg-default/60",
-              "backdrop-blur-none",
-              "backdrop-saturate-200",
-              "hover:bg-default-200/70",
-              "dark:hover:bg-default/70",
-              "group-data-[focused=true]:bg-default-200/50",
-              "dark:group-data-[focused=true]:bg-default/60",
-              "!cursor-text",
-              "border",
-            ],
-          }}
-          placeholder="Search customers by phone number..."
-          startContent={
-            <SearchIcon className="text-black/50 mb-0.5 dark:text-white/90 text-slate-400 pointer-events-none flex-shrink-0" />
-          }
-          value={searchKeyword}
-          onValueChange={setSearchKeyword}
-          onClear={() => setSearchKeyword("")}
-        />
-        <Button 
-          color="primary" 
-          variant="solid" 
-          onClick={handleSearch}
-          isLoading={isLoading}
-        >
-          Search
-        </Button>
-      </div>
+      <SearchInput
+        value={searchKeyword}
+        onValueChange={setSearchKeyword}
+        onSearch={handleSearch}
+        placeholder="Search customers by phone number..."
+        isLoading={isLoading}
+      />
 
       <DataTable
         columns={columns}

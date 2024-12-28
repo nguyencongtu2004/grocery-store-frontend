@@ -67,11 +67,11 @@ export default function Header() {
                   </PopoverTrigger>
                   <PopoverContent>
                     <div className="px-1 py-2">
-                      {/* <Link to="/profile" className="block mb-2">
+                      <Link to="profile" className="block mb-2">
                         <Button fullWidth variant="light">
                           Profile
                         </Button>
-                      </Link> */}
+                      </Link>
                       <Button
                         fullWidth
                         color="danger"

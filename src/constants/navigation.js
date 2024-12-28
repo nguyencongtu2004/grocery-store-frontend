@@ -5,6 +5,7 @@ import {
   Percent,
   Users,
   Star,
+  User,
 } from "lucide-react";
 import RevenueReportPage from "../pages/RevenueReportPage";
 import WarehouseReportPage from "../pages/WarehouseReportPage";
@@ -13,6 +14,7 @@ import InvoicePage from "../pages/InvoicePage";
 import CustomerPage from "../pages/CustomerPage";
 import Employee from "../pages/EmployeePage";
 import PurchaseOrderPage from "../pages/PurchaseOrderPage";
+import ProfilePage from "../pages/ProfilePage";
 
 export const navigation = [
   {
@@ -56,5 +58,11 @@ export const navigation = [
     route: "/purchase-order",
     icon: ShoppingCart,
     element: PurchaseOrderPage,
+  },
+  {
+    title: "Profile",
+    route: "/profile",
+    icon: User,
+    element: ProfilePage,
   },
 ];
