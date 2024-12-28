@@ -5,11 +5,18 @@ import { fetchEmployee } from "../requests/employee";
 import { Link, Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import AddEmployeeModal from "../components/employee/AddEmployeeModal";
+import EditEmployeeModal from "../components/employee/EditEmployeeModal";
+import DeleteConfirmModal from "../components/employee/DeleteConfirmModal";
+import EmployeeDetailModal from "../components/employee/EmployeeDetailModal";
 
 export default function EmployeePage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
   const itemsPerPage = 10;
 
   const { data, isLoading } = useQuery({
@@ -41,7 +48,7 @@ export default function EmployeePage() {
     {
       key: "name",
       label: "NAME",
-      render: (employee) => <p className="capitalize">{employee.role}</p>,
+      render: (employee) => <p className="capitalize">{employee.name}</p>,
     },
     {
       key: "role",
@@ -67,7 +74,7 @@ export default function EmployeePage() {
         <ActionCell
           onView={() => handleEmployeeDetail(employee)}
           onEdit={() => handleEditEmployee(employee)}
-          onDelete={() => handleDeleteEmployee(employee._id)}
+          onDelete={() => handleDeleteEmployee(employee)}
         />
       ),
       align: "center"
@@ -75,15 +82,18 @@ export default function EmployeePage() {
   ];
 
   function handleEmployeeDetail(employee) {
-    alert(`View employee detail: ${employee.name}`);
+    setSelectedEmployee(employee);
+    setIsDetailModalOpen(true);
   }
 
   function handleEditEmployee(employee) {
-    alert(`Edit employee: ${employee.name}`);
+    setSelectedEmployee(employee);
+    setIsEditModalOpen(true);
   }
 
-  function handleDeleteEmployee(employeeId) {
-    alert(`Delete employee with ID: ${employeeId}`);
+  function handleDeleteEmployee(employee) {
+    setSelectedEmployee(employee);
+    setIsDeleteModalOpen(true);
   }
 
   function handleAddEmployee() {
@@ -124,7 +134,25 @@ export default function EmployeePage() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
       />
+      {selectedEmployee && (
+        <>
+          <EditEmployeeModal
+            isOpen={isEditModalOpen}
+            onClose={() => setIsEditModalOpen(false)}
+            employee={selectedEmployee}
+          />
+          <DeleteConfirmModal
+            isOpen={isDeleteModalOpen}
+            onClose={() => setIsDeleteModalOpen(false)}
+            employee={selectedEmployee}
+          />
+          <EmployeeDetailModal
+            isOpen={isDetailModalOpen}
+            onClose={() => setIsDetailModalOpen(false)}
+            employee={selectedEmployee}
+          />
+        </>
+      )}
     </div>
   );
 }
-

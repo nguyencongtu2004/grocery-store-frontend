@@ -1,31 +1,35 @@
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Select, SelectItem } from "@nextui-org/react";
 import { Mail, Lock, User, Briefcase, Phone, MapPin } from 'lucide-react';
 import PropTypes from 'prop-types';
-import { createEmployee } from "../../requests/employee";
+import { updateEmployee } from "../../requests/employee";
 import { queryClient } from "../../requests";
 
-export default function AddEmployeeModal({ isOpen, onClose }) {
+export default function EditEmployeeModal({ isOpen, onClose, employee }) {
   async function handleSubmit(e) {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const response = await createEmployee({
-      email: formData.get('email'),
-      password: formData.get('password'),
-      name: formData.get('name'),
-      role: formData.get('role'),
-      phone: formData.get('phone'),
-      address: formData.get('address')
-    });
+    
+    try {
+      const response = await updateEmployee({
+        id: employee._id,
+        email: formData.get('email'),
+        password: formData.get('password'),
+        name: formData.get('name'),
+        role: formData.get('role'),
+        phone: formData.get('phone'),
+        address: formData.get('address')
+      });
 
-    if (response.status === 201) {
-      queryClient.invalidateQueries('employees');
-      onClose();
-    } else {
-      alert('Failed to add employee: ' + response.data.message);
+      if (response.status === 200) {
+        queryClient.invalidateQueries('employees');
+        onClose();
+      } else {
+        alert('Failed to update employee: ' + response.data.message);
+      }
+    } catch (error) {
+      alert('Error updating employee: ' + error.message);
     }
-
-    onClose();
-  };
+  }
 
   return (
     <Modal
@@ -37,7 +41,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
       <ModalContent>
         <form onSubmit={handleSubmit}>
           <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-bold">Add Employee</h2>
+            <h2 className="text-xl font-bold">Edit Employee</h2>
           </ModalHeader>
           <ModalBody>
             <div className="grid gap-4">
@@ -45,6 +49,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
                 autoFocus
                 name="email"
                 label="Email"
+                defaultValue={employee.email}
                 placeholder="nguyencongtu@gmail.com"
                 variant="bordered"
                 startContent={<Mail size={18} />}
@@ -53,16 +58,16 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
               <Input
                 name="password"
                 label="Password"
-                placeholder="123456"
+                placeholder="Leave blank if no change"
                 type="password"
                 variant="bordered"
                 startContent={<Lock size={18} />}
-                required
               />
               <div className="grid grid-cols-2 gap-4">
                 <Input
                   name="name"
                   label="Name"
+                  defaultValue={employee.name}
                   placeholder="Công Tú"
                   variant="bordered"
                   startContent={<User size={18} />}
@@ -74,7 +79,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
                   placeholder="Select role"
                   variant="bordered"
                   startContent={<Briefcase size={18} />}
-                  defaultSelectedKeys={["sale"]}
+                  defaultSelectedKeys={[employee.role]}
                   required
                 >
                   <SelectItem key="sale">Sale</SelectItem>
@@ -85,6 +90,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
                 <Input
                   name="phone"
                   label="Phone"
+                  defaultValue={employee.phone}
                   placeholder="0123456789"
                   variant="bordered"
                   startContent={<Phone size={18} />}
@@ -93,6 +99,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
                 <Input
                   name="address"
                   label="Address"
+                  defaultValue={employee.address}
                   placeholder="123, đường 456"
                   variant="bordered"
                   startContent={<MapPin size={18} />}
@@ -106,7 +113,7 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
               Cancel
             </Button>
             <Button color="primary" type="submit">
-              Add Employee
+              Update Employee
             </Button>
           </ModalFooter>
         </form>
@@ -115,7 +122,8 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
   );
 }
 
-AddEmployeeModal.propTypes = {
+EditEmployeeModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired
+  onClose: PropTypes.func.isRequired,
+  employee: PropTypes.object.isRequired
 };
