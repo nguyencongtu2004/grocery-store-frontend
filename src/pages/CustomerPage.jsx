@@ -7,6 +7,8 @@ import { ActionCell, DataTable } from "../components/DataTable";
 import AddCustomerModal from "../components/customer/AddCustomerModal";
 import EditCustomerModal from "../components/customer/EditCustomerModal";
 import CustomerDetailModal from "../components/customer/CustomerDetailModal";
+import { Input, Button } from "@nextui-org/react";
+import { SearchIcon } from "lucide-react";
 
 export default function CustomerPage() {
   const [page, setPage] = useState(1);
@@ -15,11 +17,18 @@ export default function CustomerPage() {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const itemsPerPage = 10;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["customer", page, itemsPerPage],
-    queryFn: ({ signal }) => fetchCustomers({ signal, page, itemsPerPage }),
+    queryKey: ["customer", page, itemsPerPage, debouncedKeyword],
+    queryFn: ({ signal }) => fetchCustomers({ 
+      signal, 
+      page, 
+      itemsPerPage, 
+      keyword: debouncedKeyword 
+    }),
   });
 
   const customers = data?.data || [];
@@ -29,6 +38,16 @@ export default function CustomerPage() {
       setTotalPages(data.pagination.totalPages);
     }
   }, [data]);
+
+  // Debounce search to prevent too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(searchKeyword);
+      setPage(1); // Reset to first page on new search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchKeyword]);
 
   const columns = [
     {
@@ -100,6 +119,11 @@ export default function CustomerPage() {
     setIsAddModalOpen(true);
   }
 
+  function handleSearch() {
+    setDebouncedKeyword(searchKeyword);
+    setPage(1);
+  }
+
   return (
     <>
       <PageTitle
@@ -109,6 +133,49 @@ export default function CustomerPage() {
         onButonClick={handleAddCustomer}
         isLoading={isLoading}
       />
+
+      <div className="flex gap-4 mb-4">
+        <Input
+          isClearable
+          radius="lg"
+          classNames={{
+            label: "text-black/50 dark:text-white/90",
+            input: [
+              "bg-transparent",
+              "text-black/90 dark:text-white/90",
+              "placeholder:text-default-700/50 dark:placeholder:text-white/60",
+            ],
+            innerWrapper: "bg-transparent",
+            inputWrapper: [
+              "bg-default-200/50",
+              "dark:bg-default/60",
+              "backdrop-blur-none",
+              "backdrop-saturate-200",
+              "hover:bg-default-200/70",
+              "dark:hover:bg-default/70",
+              "group-data-[focused=true]:bg-default-200/50",
+              "dark:group-data-[focused=true]:bg-default/60",
+              "!cursor-text",
+              "border",
+            ],
+          }}
+          placeholder="Search customers by phone number..."
+          startContent={
+            <SearchIcon className="text-black/50 mb-0.5 dark:text-white/90 text-slate-400 pointer-events-none flex-shrink-0" />
+          }
+          value={searchKeyword}
+          onValueChange={setSearchKeyword}
+          onClear={() => setSearchKeyword("")}
+        />
+        <Button 
+          color="primary" 
+          variant="solid" 
+          onClick={handleSearch}
+          isLoading={isLoading}
+        >
+          Search
+        </Button>
+      </div>
 
       <DataTable
         columns={columns}
@@ -152,4 +219,3 @@ export default function CustomerPage() {
     </>
   );
 }
-

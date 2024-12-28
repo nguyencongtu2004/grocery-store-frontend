@@ -3,8 +3,11 @@ import { httpRequest } from "./index.js";
 
 // Lấy danh sách khách hàng
 export async function fetchCustomers({ signal, page = 1, itemsPerPage = 10, keyword = "" }) {
+  // Loại bỏ khoảng trắng thừa và tách từ khóa
+  const processedKeyword = keyword.trim().split(/\s+/).join(' ');
+
   const response = await httpRequest.get({
-    url: api.customer.getAll({ page, itemsPerPage, keyword }),
+    url: api.customer.getAll({ page, itemsPerPage, keyword: processedKeyword }),
     signal,
   });
 
