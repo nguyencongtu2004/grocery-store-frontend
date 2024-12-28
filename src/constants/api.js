@@ -14,7 +14,7 @@ export const api = {
     updateEmployee: ({ id }) => `/user/${id}`,
     deleteEmployee: ({ id }) => `/user/${id}`,
     getAll: ({ page, itemsPerPage }) => `/employees?page=${page}&limit=${itemsPerPage}`,
-    getDetail: ({ id, page, itemsPerPage }) => `/employees/${id}?page=${page}&limit=${itemsPerPage}`,
+    getOneById: ({ id }) => `/employees/${id}`,
   },
   invoice: {
     getAll: ({ page, itemsPerPage }) => `/invoices?page=${page}&limit=${itemsPerPage}`,

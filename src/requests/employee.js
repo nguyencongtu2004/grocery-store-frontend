@@ -51,3 +51,10 @@ export async function deleteEmployee({ id, signal }) {
     signal,
   });
 }
+
+export async function getOneEmployee({ id, signal }) {
+  return await httpRequest.get({
+    url: api.employee.getOneById({ id }),
+    signal,
+  });
+}

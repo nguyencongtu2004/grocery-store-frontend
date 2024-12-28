@@ -149,7 +149,7 @@ export default function EmployeePage() {
           <EmployeeDetailModal
             isOpen={isDetailModalOpen}
             onClose={() => setIsDetailModalOpen(false)}
-            employee={selectedEmployee}
+            employeeId={selectedEmployee._id}
           />
         </>
       )}
