@@ -3,7 +3,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input
 import { ImageIcon } from "lucide-react";
 import PropTypes from "prop-types";
 
-export function ViewProductModal({ isOpen, onClose, product }) {
+export default function ViewProductModal({ isOpen, onClose, product }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl" placement="center">
       <ModalContent>

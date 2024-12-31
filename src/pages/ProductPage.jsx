@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PageTitle from "../components/PageTitle";
-import { productService } from "../requests/product";
+import { fetchProduct, deleteProduct } from "../requests/product";
 import { Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import ViewProductModal from "../components/product/ViewProductModal";
@@ -16,31 +16,31 @@ export default function ProductPage() {
   const itemsPerPage = 10;
 
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ["products", page, itemsPerPage],
-    queryFn: ({ signal }) => productService.getProducts({ signal, page, itemsPerPage }),
+    queryKey: ["product", page, itemsPerPage],
+    queryFn: ({ signal }) => fetchProduct({ signal, page, itemsPerPage }),
   });
 
-  const products = data?.products || [];
+  const products = data?.data?.data || [];
 
   useEffect(() => {
-    if (data?.totalItems) {
-      setTotalPages(Math.ceil(data.totalItems / itemsPerPage));
+    if (data?.data?.pagination) {
+      setTotalPages(data.data.pagination.totalPages);
     }
   }, [data]);
 
   const columns = [
     {
-      key: "index",
-      label: "Index",
-      render: (_, __, index) => (page - 1) * itemsPerPage + index + 1,
+      key: "_id",
+      label: "STT",
+      render: (_, index) => (page - 1) * itemsPerPage + index + 1,
       align: "center",
     },
     {
-      key: "image",
-      label: "Image",
+      key: "images",
+      label: "IMAGES",
       render: (product) => (
         <img
-          src={product.image || "/placeholder-image.png"}
+          src={product.images?.[0] || "/placeholder-image.png"}
           alt={product.name}
           className="w-10 h-10 object-cover rounded"
         />
@@ -49,33 +49,52 @@ export default function ProductPage() {
     },
     {
       key: "name",
-      label: "Name",
+      label: "NAME",
       render: (product) => <p>{product.name}</p>,
     },
     {
       key: "category",
-      label: "Category",
-      render: (product) => <p>{product.category || "Uncategorized"}</p>,
+      label: "CATEGORY",
+      render: (product) => <p>{product.category?.name || "Uncategorized"}</p>,
     },
     {
-      key: "price",
-      label: "Price",
-      render: (product) => <p>{product.price?.toLocaleString()} VND</p>,
+      key: "quantity",
+      label: "QUANTITY",
+      render: (product) => <p>{product.quantity || "N/A"}</p>,
       align: "right",
     },
     {
+      key: "purchaseDate",
+      label: "PURCHASE DATE",
+      render: (product) => <p>{product.purchaseDate || "N/A"}</p>,
+      align: "center",
+    },
+    {
+      key: "createdDate",
+      label: "CREATED DATE",
+      render: (product) => <p>{product.createdDate || "N/A"}</p>,
+      align: "center",
+    },
+    {
+      key: "expiredDate",
+      label: "EXPIRED DATE",
+      render: (product) => <p>{product.expiredDate || "N/A"}</p>,
+      align: "center",
+    },
+    {
       key: "actions",
-      label: "Actions",
+      label: "ACTIONS",
       render: (product) => (
         <ActionCell
           onView={() => handleViewProduct(product)}
           onEdit={() => handleEditProduct(product)}
-          onDelete={() => handleDeleteProduct(product)}
+          onDelete={() => handleDeleteProduct(product._id)}
         />
       ),
-      align: "center",
+      align: "left",
     },
   ];
+  
 
   function handleViewProduct(product) {
     setSelectedProduct(product);
@@ -87,26 +106,30 @@ export default function ProductPage() {
     setIsEditModalOpen(true);
   }
 
-  function handleSaveProduct(updatedProduct) {
-    console.log("Saving updated product:", updatedProduct);
-    setIsEditModalOpen(false);
-    refetch(); // Refresh product list
-  }
-
-  function handleDeleteProduct(product) {
-    if (window.confirm(`Are you sure you want to delete product "${product.name}"?`)) {
-      productService.deleteProduct(product._id).then(() => {
+  async function handleDeleteProduct(productId) {
+    if (window.confirm("Are you sure you want to delete this product?")) {
+      try {
+        await deleteProduct(productId);
         alert("Product deleted successfully");
         refetch();
-      });
+      } catch (error) {
+        console.error("Error deleting product:", error);
+        alert("Failed to delete product");
+      }
     }
+  }
+
+  function handleSaveProduct(updatedProduct) {
+    console.log("Updated product:", updatedProduct);
+    setIsEditModalOpen(false);
+    refetch(); // Refresh the product list
   }
 
   return (
     <div className="space-y-4">
       <PageTitle
         title="Product Management"
-        description="Manage your products effectively."
+        description="Manage products of your store"
         isLoading={isLoading}
       />
       <DataTable
@@ -134,10 +157,6 @@ export default function ProductPage() {
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         product={selectedProduct}
-        onEdit={() => {
-          setIsViewModalOpen(false);
-          setIsEditModalOpen(true);
-        }}
       />
       <EditProductModal
         isOpen={isEditModalOpen}
