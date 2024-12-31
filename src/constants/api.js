@@ -1,6 +1,20 @@
 import { getUserId } from "../ultis/auth.js";
 
 export const api = {
+  report: {
+    // Revenue report
+    revenueReport: ({ interval, startDate, endDate, groupBy }) =>
+      `/reports/revenue?interval=${interval}&startDate=${startDate}&endDate=${endDate}&groupBy=${groupBy}`,
+    profitReport: ({ startDate, endDate, interval }) =>
+      `/reports/profit?startDate=${startDate}&endDate=${endDate}&interval=${interval}`,
+    salesReport: ({ startDate, endDate, interval }) =>
+      `/reports/sales?startDate=${startDate}&endDate=${endDate}&interval=${interval}`,
+    // Stock report
+    stockByCategory: ({ threshold }) => `/reports/stock-by-category?threshold=${threshold}`,
+    expiringProducts: ({ startDate , endDate}) => `/reports/expiring-products?startDate=${startDate}&endDate=${endDate}`,
+    importByProvider: ({ startDate, endDate }) => `/reports/imports-by-provider?startDate=${startDate}&endDate=${endDate}`,
+    topSellingProducts: ({ startDate, endDate }) => `/reports/top-selling-products?startDate=${startDate}&endDate=${endDate}`,
+  },
   auth: {
     login: () => "/auth/login",
     register: () => "/auth/register",
