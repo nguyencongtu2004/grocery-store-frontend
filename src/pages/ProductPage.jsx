@@ -1,111 +1,121 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PageTitle from "../components/PageTitle";
-import { fetchProduct } from "../requests/product";
-import { Link, Pagination } from "@nextui-org/react";
+import { productService } from "../requests/product";
+import { Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
-import AddProductModal from "../components/product/AddProductModal";
+import ViewProductModal from "../components/product/ViewProductModal";
+import EditProductModal from "../components/product/EditProductModal";
 
 export default function ProductPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const itemsPerPage = 10;
 
-  const { data, isLoading } = useQuery({
-    queryKey: ["product", page, itemsPerPage],
-    queryFn: ({ signal }) => fetchProduct({ signal, page, itemsPerPage }),
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ["products", page, itemsPerPage],
+    queryFn: ({ signal }) => productService.getProducts({ signal, page, itemsPerPage }),
   });
-  
-  
-  const products = data?.data?.data || [];
-  console.log(products);
+
+  const products = data?.products || [];
 
   useEffect(() => {
-    if (data?.data?.pagination) {
-      setTotalPages(data.data.pagination.totalPages);
+    if (data?.totalItems) {
+      setTotalPages(Math.ceil(data.totalItems / itemsPerPage));
     }
   }, [data]);
 
-  const columns = [ 
+  const columns = [
     {
-      key: "_id",
-      label: "STT",
-      render: (_, index) => (page - 1) * itemsPerPage + index + 1,
-      align: "center"
+      key: "index",
+      label: "Index",
+      render: (_, __, index) => (page - 1) * itemsPerPage + index + 1,
+      align: "center",
     },
     {
-      key: "images",
-      label: "IMAGES",
-      render: (product) => <Link href={product.images}>{product.images}</Link>,
+      key: "image",
+      label: "Image",
+      render: (product) => (
+        <img
+          src={product.image || "/placeholder-image.png"}
+          alt={product.name}
+          className="w-10 h-10 object-cover rounded"
+        />
+      ),
+      align: "center",
     },
     {
       key: "name",
-      label: "NAME",
-      render: (product) => <Link href={product.images}>{product.name}</Link>,
+      label: "Name",
+      render: (product) => <p>{product.name}</p>,
     },
     {
       key: "category",
-      label: "CATEGORY",
-      render: (product) => <p className="capitalize">{product.category?.id}</p>,
-    },
-   
-    {
-      key: "createdDate",
-      label: "CREATEDDATE",
-      render: (product) => <p className="truncate max-w-xs"></p>,
+      label: "Category",
+      render: (product) => <p>{product.category || "Uncategorized"}</p>,
     },
     {
-      key: "expiredDate",
-      label: "EXPRIREDDATE",
-      render: (product) => <p className="truncate max-w-xs"></p>,
+      key: "price",
+      label: "Price",
+      render: (product) => <p>{product.price?.toLocaleString()} VND</p>,
+      align: "right",
     },
     {
       key: "actions",
-      label: "",
+      label: "Actions",
       render: (product) => (
         <ActionCell
-          onView={() => handleProductDetail(product)}
+          onView={() => handleViewProduct(product)}
           onEdit={() => handleEditProduct(product)}
-          onDelete={() => handleDeleteProduct(product._id)}
+          onDelete={() => handleDeleteProduct(product)}
         />
       ),
-      align: "center"
+      align: "center",
     },
   ];
 
-  function handleProductDetail(product) {
-    alert(`View product detail: ${product.name}`);
+  function handleViewProduct(product) {
+    setSelectedProduct(product);
+    setIsViewModalOpen(true);
   }
 
   function handleEditProduct(product) {
-    alert(`Edit product: ${product.name}`);
+    setSelectedProduct(product);
+    setIsEditModalOpen(true);
   }
 
-  function handleDeleteProduct(productId) {
-    alert(`Delete product with ID: ${productId}`);
+  function handleSaveProduct(updatedProduct) {
+    console.log("Saving updated product:", updatedProduct);
+    setIsEditModalOpen(false);
+    refetch(); // Refresh product list
   }
 
-  function handleAddProduct() {
-    setIsAddModalOpen(true);
+  function handleDeleteProduct(product) {
+    if (window.confirm(`Are you sure you want to delete product "${product.name}"?`)) {
+      productService.deleteProduct(product._id).then(() => {
+        alert("Product deleted successfully");
+        refetch();
+      });
+    }
   }
-  console.log({products})
+
   return (
     <div className="space-y-4">
       <PageTitle
         title="Product Management"
-        description="Manage products of your store"
-        buttonTitle="Add new product"
-        onButonClick={handleAddProduct}
+        description="Manage your products effectively."
         isLoading={isLoading}
       />
       <DataTable
         data={products}
         columns={columns}
         isLoading={isLoading}
-        emptyContent="No products found"
+        emptyContent="No products found."
         bottomContent={
-          totalPages > 1 ? (
+          totalPages > 1 && (
             <div className="flex w-full justify-center">
               <Pagination
                 isCompact
@@ -117,14 +127,24 @@ export default function ProductPage() {
                 onChange={(newPage) => setPage(newPage)}
               />
             </div>
-          ) : null
+          )
         }
       />
-      <AddProductModal
-        isOpen={isAddModalOpen}
-        onClose={() => setIsAddModalOpen(false)}
+      <ViewProductModal
+        isOpen={isViewModalOpen}
+        onClose={() => setIsViewModalOpen(false)}
+        product={selectedProduct}
+        onEdit={() => {
+          setIsViewModalOpen(false);
+          setIsEditModalOpen(true);
+        }}
+      />
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => setIsEditModalOpen(false)}
+        product={selectedProduct}
+        onSave={handleSaveProduct}
       />
     </div>
   );
 }
-

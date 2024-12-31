@@ -47,7 +47,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                 autoFocus
                 name="customer"
                 label="Customer"
-                placeholder="Công Tú"
+                placeholder="John Doe"
                 variant="bordered"
                 required
               />
@@ -59,7 +59,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                   <Input
                     name={`category-${index}`}
                     label="Category"
-                    placeholder="Gia vị"
+                    placeholder="Spices"
                     variant="bordered"
                     value={line.category}
                     onChange={(e) =>
@@ -70,7 +70,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                   <Input
                     name={`product-${index}`}
                     label="Product"
-                    placeholder="Nước mắm"
+                    placeholder="Fish Sauce"
                     variant="bordered"
                     value={line.product}
                     onChange={(e) =>
@@ -104,9 +104,8 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                 onClick={addProductLine}
               >
                 <span className="text-blue-500 font-bold text-sm">+</span>
-                <span className="text-blue-600 text-sm">Thêm sản phẩm</span>
+                <span className="text-blue-600 text-sm">Add Product</span>
               </Button>
-
             </div>
           </ModalBody>
           <ModalFooter>
