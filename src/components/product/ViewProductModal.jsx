@@ -1,6 +1,5 @@
-import React from "react";
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@nextui-org/react";
-import { ImageIcon } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import PropTypes from "prop-types";
 
 export default function ViewProductModal({ isOpen, onClose, product }) {
@@ -12,9 +11,9 @@ export default function ViewProductModal({ isOpen, onClose, product }) {
         </ModalHeader>
         <ModalBody>
           <div className="grid grid-cols-4 gap-4 mb-6">
-            {(product?.images || ["", "", "", ""]).map((image, index) => (
+            {product?.images?.map((image, index) => (
               <div
-                key={index}
+                key={`image-${index}`}
                 className="border rounded-lg p-4 flex items-center justify-center h-24"
               >
                 {image ? (
@@ -35,49 +34,40 @@ export default function ViewProductModal({ isOpen, onClose, product }) {
 
           <div className="grid grid-cols-2 gap-4">
             <Input
-              label={<span className="text-gray-700">Product Name</span>}
+              label="Product Name"
               value={product?.name || "N/A"}
               readOnly
               variant="bordered"
             />
             <Input
-              label={<span className="text-gray-700">Category</span>}
-              value={typeof product?.category === "object" ? product?.category?.name || "N/A" : product?.category || "N/A"}
+              label="Category"
+              value={product?.category?.name || "Uncategorized"}
               readOnly
               variant="bordered"
             />
             <Input
-              label={<span className="text-gray-700">Selling Price</span>}
-              value={product?.sellingPrice || "N/A"}
+              label="Stock Quantity"
+              value={product?.stockQuantity || "0"}
               readOnly
               variant="bordered"
             />
             <Input
-              label={<span className="text-gray-700">Stock Quantity</span>}
-              value={product?.stockQuantity || "N/A"}
+              label="Price"
+              value={product?.price || "N/A"}
               readOnly
               variant="bordered"
             />
             <Input
-              label={<span className="text-gray-700">Purchase Price</span>}
-              value={product?.purchasePrice || "N/A"}
+              label="Order Date"
+              value={product?.orderDate || "N/A"}
               readOnly
               variant="bordered"
             />
             <Input
-              label={<span className="text-gray-700">Purchase Date</span>}
-              value={product?.purchaseDate || "N/A"}
+              label="Expiration Date"
+              value={product?.expiredDate || "N/A"}
               readOnly
               variant="bordered"
-            />
-          </div>
-          <div className="mt-4">
-            <Input
-              label={<span className="text-gray-700">Expiration Date</span>}
-              value={product?.expirationDate || "N/A"}
-              readOnly
-              variant="bordered"
-              fullWidth
             />
           </div>
         </ModalBody>
@@ -96,3 +86,4 @@ ViewProductModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   product: PropTypes.object,
 };
+  

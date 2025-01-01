@@ -1,6 +1,7 @@
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Select, SelectItem } from "@nextui-org/react";
 import { Trash, Image as ImageIcon } from "lucide-react";
 import { useState, useEffect } from "react";
+import PropTypes from "prop-types";
 
 export default function EditPurchaseModal({ isOpen, onClose, purchaseOrder, onUpdate }) {
   const [formData, setFormData] = useState({

@@ -1,4 +1,4 @@
-/* import { Pagination } from "@nextui-org/react";
+import { Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import PageTitle from "../components/PageTitle";
 import { useState } from "react";
@@ -161,15 +161,4 @@ export default function PurchaseOrderPage() {
       </div>
     </>
   );
-} */
-
-
-
-
-  export default function PurchaseOrderPage() {
-    return (
-      <div>
-        <h1>Warehouse report</h1>
-      </div>
-    );
-  }
+}

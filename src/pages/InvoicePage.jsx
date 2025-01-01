@@ -26,6 +26,7 @@ export default function InvoicePage() {
   });
 
   const invoices = data?.data?.data || [];
+  console.log(invoices);
 
   useEffect(() => {
     if (data?.data?.pagination) {
@@ -67,9 +68,13 @@ export default function InvoicePage() {
       key: "productPrice",
       label: "Selling Price",
       render: (invoice) => {
-        return invoice?.invoiceDetails?.map((detail) => (
-          <p>{(detail.product?.sellingPrice || 0).toLocaleString()} VND</p>
-        ));
+        return (
+          invoice?.invoiceDetails?.map((detail, idx) => (
+            <p key={idx}>
+              {(detail?.product?.sellingPrice || 0).toLocaleString()} VND
+            </p>
+          )) || <p>N/A</p>
+        );
       },
       align: "right",
     },
@@ -77,22 +82,20 @@ export default function InvoicePage() {
       key: "quantity",
       label: "Quantity",
       render: (invoice) => {
-        return invoice?.invoiceDetails?.map((detail) => (
-          <p>{detail.quantity}</p>
-        ));
+        return (
+          invoice?.invoiceDetails?.map((detail, idx) => (
+            <p key={idx}>{detail?.quantity ?? 0}</p>
+          )) || <p>N/A</p>
+        );
       },
       align: "center",
     },
     {
-      key: "totalAmount",
-      label: "Total Amount",
+      key: "totalPrice",
+      label: "Total Price",
       render: (invoice) => {
-        const totalAmount = invoice?.invoiceDetails?.reduce((sum, detail) => {
-          const price = detail?.product?.sellingPrice || 0;
-          const quantity = detail?.quantity || 0;
-          return sum + price * quantity;
-        }, 0);
-        return <p className="font-semibold text-blue-600">{totalAmount.toLocaleString()} VND</p>;
+        const totalPrice = invoice.totalPrice;
+        return <p className="font-semibold text-blue-600">{(totalPrice || 0).toLocaleString()}</p>;
       },
       align: "center",
     },

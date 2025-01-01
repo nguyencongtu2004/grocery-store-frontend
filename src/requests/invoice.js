@@ -1,28 +1,46 @@
-import { httpRequest } from ".";
-import { api } from "../constants/api";
+  import { api } from "../constants/api.js";
+  import { httpRequest } from "./index.js";
 
-const getInvoices = async ({ signal, page, itemsPerPage, searchTerm, filter }) => {
-  return await httpRequest.get({
-    url: api.invoice.getAll({ page, itemsPerPage, searchTerm, sortBy: filter.sortBy, order: filter.order }),
-    signal,
-  });
-};
+  export const invoiceService = {
+    getInvoices: async ({ signal, page, itemsPerPage, searchTerm = "", filter = {} }) => {
+      const { sortBy = "createdAt", order = "desc" } = filter;
+      const response = await httpRequest.get({
+        url: api.invoice.getAll({ page, itemsPerPage, searchTerm, sortBy, order }),
+        signal,
+      });
+      return response;
+    },
 
-const getDetailInvoices = async (id) => {
-  return await httpRequest.get({ url: api.invoice.getOneById(id) });
-};
+    createInvoice: async (data) => {
+      const response = await httpRequest.post({
+        url: api.invoice.create(),
+        data,
+      });
+      return response;
+    },
 
-const createInvoice = async (invoiceData) => {
-  return await httpRequest.post({ url: api.invoice.create(), data: invoiceData });
-};
+    exportPDF: async (id) => {
+      const response = await httpRequest.get({
+        url: api.invoice.exportPDF(id),
+        responseType: "blob", // This is used for downloading files
+      });
+      return response;
+    },
+  };
 
-const exportInvoicePDF = async (id) => {
-  return await httpRequest.get({ url: api.invoice.exportPDF(id), responseType: "blob" });
-};
+  export const customerService = {
+    searchCustomers: async (keyword) => {
+      return await httpRequest.get({
+        url: `/customers?keyword=${keyword}`,
+      });
+    },    
+  };
+  
 
-export const invoiceService = {
-  getInvoices,
-  getDetailInvoices,
-  createInvoice,
-  exportInvoicePDF,
-};
+  export const productService = {
+    searchProducts: async (keyword, categoryId) => {
+      return await httpRequest.get({
+        url: `/products?keyword=${keyword}&category=${categoryId}`,
+      });
+    },    
+  };
