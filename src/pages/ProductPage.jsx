@@ -5,17 +5,20 @@ import { fetchProduct } from "../requests/product";
 import { Image, Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import ViewProductModal from "../components/product/ViewProductModal";
+import SearchInput from "../components/SearchInput";
 
 export default function ProductPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchKeyword, setSearchKeyword] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const itemsPerPage = 10;
 
   const { data, isLoading } = useQuery({
-    queryKey: ["product", page, itemsPerPage],
-    queryFn: ({ signal }) => fetchProduct({ signal, page, itemsPerPage }),
+    queryKey: ["product", page, itemsPerPage, debouncedKeyword],
+    queryFn: ({ signal }) => fetchProduct({ signal, page, itemsPerPage, keyword: debouncedKeyword }),
   });
 
   const products = data?.data?.data || [];
@@ -25,6 +28,16 @@ export default function ProductPage() {
       setTotalPages(data.data.pagination.totalPages);
     }
   }, [data]);
+
+  // Debounce search to prevent too many API calls
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedKeyword(searchKeyword);
+      setPage(1); // Reset to first page on new search
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchKeyword]);
 
   const columns = [
     {
@@ -96,11 +109,23 @@ export default function ProductPage() {
     setIsViewModalOpen(true);
   }
 
+  function handleSearch() {
+    setDebouncedKeyword(searchKeyword);
+    setPage(1);
+  }
+
   return (
     <div className="space-y-4">
       <PageTitle
         title="Product Management"
         description="Manage products of your store"
+        isLoading={isLoading}
+      />
+      <SearchInput
+        value={searchKeyword}
+        onValueChange={setSearchKeyword}
+        onSearch={handleSearch}
+        placeholder="Search customers by phone number..."
         isLoading={isLoading}
       />
       <DataTable

@@ -17,7 +17,7 @@ export default function ViewProductModal({ isOpen, onClose, product }) {
     <Modal isOpen={isOpen} onClose={onClose} size="2xl" placement="center">
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
-          <h2 className="text-xl font-bold">View Product</h2>
+          <h2 className="text-xl font-bold text-center">{productDetail?.name || 'View Product'}</h2>
         </ModalHeader>
         <ModalBody>
           <div className="grid grid-cols-4 gap-4 mb-6">

@@ -42,7 +42,7 @@ export const api = {
     getOneById: ({ id }) => `/invoices/${id}`,
   },
   product: {
-    getAll: ({ page, itemsPerPage }) => `/products?page=${page}&limit=${itemsPerPage}`,
+    getAll: ({ page, itemsPerPage, keyword }) => `/products?page=${page}&limit=${itemsPerPage}&name=${keyword ?? ""}`,
     getProduct: ({ id }) => `/products/${id}`,
   },
   purchaseOrder: {
