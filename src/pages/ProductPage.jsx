@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PageTitle from "../components/PageTitle";
 import { fetchProduct, deleteProduct } from "../requests/product";
-import { Pagination } from "@nextui-org/react";
+import { Image, Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import ViewProductModal from "../components/product/ViewProductModal";
 import EditProductModal from "../components/product/EditProductModal";
@@ -32,15 +32,15 @@ export default function ProductPage() {
     {
       key: "_id",
       label: "STT",
-      render: (_, index) => (page - 1) * itemsPerPage + index + 1,
+      render: (product) => (page - 1) * itemsPerPage + (products.indexOf(product) + 1),
       align: "center",
     },
     {
       key: "images",
       label: "IMAGES",
       render: (product) => (
-        <img
-          src={product.images?.[0] || "/placeholder-image.png"}
+        <Image
+          src={product.images?.[0] || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"}
           alt={product.name}
           className="w-10 h-10 object-cover rounded"
         />
@@ -94,7 +94,7 @@ export default function ProductPage() {
       align: "left",
     },
   ];
-  
+
 
   function handleViewProduct(product) {
     setSelectedProduct(product);

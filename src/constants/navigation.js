@@ -5,6 +5,7 @@ import {
   Percent,
   Users,
   Star,
+  PackageCheck,
 } from "lucide-react";
 import RevenueReportPage from "../pages/RevenueReportPage";
 import WarehouseReportPage from "../pages/WarehouseReportPage";
@@ -13,6 +14,7 @@ import InvoicePage from "../pages/InvoicePage";
 import CustomerPage from "../pages/CustomerPage";
 import Employee from "../pages/EmployeePage";
 import PurchaseOrderPage from "../pages/PurchaseOrderPage";
+import ProviderPage from "../pages/ProviderPage";
 
 export const navigation = [
   {
@@ -52,9 +54,15 @@ export const navigation = [
     element: CustomerPage,
   },
   {
-    title: "PurchaseOrder",
+    title: "Purchase Order",
     route: "/purchase-order",
     icon: ShoppingCart,
     element: PurchaseOrderPage,
+  },
+  {
+    title: "Provider Management",
+    route: "/providers",
+    icon: PackageCheck,
+    element: ProviderPage,
   },
 ];

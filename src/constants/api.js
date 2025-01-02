@@ -49,5 +49,12 @@ export const api = {
     getAll: ({ page, itemsPerPage }) => `/purchase-orders?page=${page}&limit=${itemsPerPage}`,
     getDetail: ({ page, itemsPerPage }) => `/purchase-orders/${id}?page=${page}&limit=${itemsPerPage}`
 
+  },
+  provider: {
+    getAll: () => `/providers`,
+    createProvider: () => `/providers`,
+    updateProvider: ({ id }) => `/providers/${id}`,
+    deleteProvider: ({ id }) => `/providers/${id}`,
+    getProvider: ({ id }) => `/providers/${id}`,
   }
 };
