@@ -11,7 +11,7 @@ export const api = {
       `/reports/sales?startDate=${startDate}&endDate=${endDate}&interval=${interval}`,
     // Stock report
     stockByCategory: ({ threshold }) => `/reports/stock-by-category?threshold=${threshold}`,
-    expiringProducts: ({ startDate , endDate}) => `/reports/expiring-products?startDate=${startDate}&endDate=${endDate}`,
+    expiringProducts: ({ startDate, endDate }) => `/reports/expiring-products?startDate=${startDate}&endDate=${endDate}`,
     importByProvider: ({ startDate, endDate }) => `/reports/imports-by-provider?startDate=${startDate}&endDate=${endDate}`,
     topSellingProducts: ({ startDate, endDate }) => `/reports/top-selling-products?startDate=${startDate}&endDate=${endDate}`,
   },
@@ -39,16 +39,15 @@ export const api = {
   },
   invoice: {
     getAll: ({ page, itemsPerPage }) => `/invoices?page=${page}&limit=${itemsPerPage}`,
-    getOneById: ({ id, page, itemsPerPage }) => `/invoices/${id}?page=${page}&limit=${itemsPerPage}`,
+    getOneById: ({ id }) => `/invoices/${id}`,
   },
   product: {
     getAll: ({ page, itemsPerPage }) => `/products?page=${page}&limit=${itemsPerPage}`,
-    getDetail: ({ id, page, itemsPerPage }) => `/products/${id}?page=${page}&limit=${itemsPerPage}`,
+    getProduct: ({ id }) => `/products/${id}`,
   },
   purchaseOrder: {
     getAll: ({ page, itemsPerPage }) => `/purchase-orders?page=${page}&limit=${itemsPerPage}`,
-    getDetail: ({ page, itemsPerPage }) => `/purchase-orders/${id}?page=${page}&limit=${itemsPerPage}`
-
+    getDetail: ({ id }) => `/purchase-orders/${id}`
   },
   provider: {
     getAll: () => `/providers`,

@@ -1,21 +1,19 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import PageTitle from "../components/PageTitle";
-import { fetchProduct, deleteProduct } from "../requests/product";
+import { fetchProduct } from "../requests/product";
 import { Image, Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import ViewProductModal from "../components/product/ViewProductModal";
-import EditProductModal from "../components/product/EditProductModal";
 
 export default function ProductPage() {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const itemsPerPage = 10;
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["product", page, itemsPerPage],
     queryFn: ({ signal }) => fetchProduct({ signal, page, itemsPerPage }),
   });
@@ -58,27 +56,27 @@ export default function ProductPage() {
       render: (product) => <p>{product.category?.name || "Uncategorized"}</p>,
     },
     {
-      key: "quantity",
-      label: "QUANTITY",
-      render: (product) => <p>{product.quantity || "N/A"}</p>,
-      align: "right",
-    },
-    {
-      key: "purchaseDate",
-      label: "PURCHASE DATE",
-      render: (product) => <p>{product.purchaseDate || "N/A"}</p>,
+      key: "sellingPrice",
+      label: "SELLING PRICE",
+      render: (product) => <p>{product.sellingPrice || "N/A"}</p>,
       align: "center",
     },
     {
-      key: "createdDate",
-      label: "CREATED DATE",
-      render: (product) => <p>{product.createdDate || "N/A"}</p>,
+      key: "stockQuantity",
+      label: "STOCK QUANTITY",
+      render: (product) => <p>{product.stockQuantity || "N/A"}</p>,
       align: "center",
     },
     {
-      key: "expiredDate",
-      label: "EXPIRED DATE",
-      render: (product) => <p>{product.expiredDate || "N/A"}</p>,
+      key: "importDate",
+      label: "IMPORT DATE",
+      render: (product) => <p>{new Date(product.importDate).toLocaleDateString() || "N/A"}</p>,
+      align: "center",
+    },
+    {
+      key: "expireDate",
+      label: "EXPIRE DATE",
+      render: (product) => <p>{new Date(product.expireDate).toLocaleDateString() || "N/A"}</p>,
       align: "center",
     },
     {
@@ -87,42 +85,15 @@ export default function ProductPage() {
       render: (product) => (
         <ActionCell
           onView={() => handleViewProduct(product)}
-          onEdit={() => handleEditProduct(product)}
-          onDelete={() => handleDeleteProduct(product._id)}
         />
       ),
       align: "left",
     },
   ];
 
-
   function handleViewProduct(product) {
     setSelectedProduct(product);
     setIsViewModalOpen(true);
-  }
-
-  function handleEditProduct(product) {
-    setSelectedProduct(product);
-    setIsEditModalOpen(true);
-  }
-
-  async function handleDeleteProduct(productId) {
-    if (window.confirm("Are you sure you want to delete this product?")) {
-      try {
-        await deleteProduct(productId);
-        alert("Product deleted successfully");
-        refetch();
-      } catch (error) {
-        console.error("Error deleting product:", error);
-        alert("Failed to delete product");
-      }
-    }
-  }
-
-  function handleSaveProduct(updatedProduct) {
-    console.log("Updated product:", updatedProduct);
-    setIsEditModalOpen(false);
-    refetch(); // Refresh the product list
   }
 
   return (
@@ -157,12 +128,6 @@ export default function ProductPage() {
         isOpen={isViewModalOpen}
         onClose={() => setIsViewModalOpen(false)}
         product={selectedProduct}
-      />
-      <EditProductModal
-        isOpen={isEditModalOpen}
-        onClose={() => setIsEditModalOpen(false)}
-        product={selectedProduct}
-        onSave={handleSaveProduct}
       />
     </div>
   );

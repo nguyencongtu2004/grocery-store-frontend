@@ -1,8 +1,18 @@
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@nextui-org/react";
+import { useQuery } from "@tanstack/react-query";
 import { Image as ImageIcon } from "lucide-react";
 import PropTypes from "prop-types";
+import { getProductById } from "../../requests/product";
 
 export default function ViewProductModal({ isOpen, onClose, product }) {
+  const { data } = useQuery({
+    queryKey: ["product", product?._id],
+    queryFn: () => getProductById({ id: product?._id }),
+    enabled: !!product?._id,
+  });
+
+  const productDetail = data?.data?.data || {};
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="2xl" placement="center">
       <ModalContent>
@@ -11,7 +21,7 @@ export default function ViewProductModal({ isOpen, onClose, product }) {
         </ModalHeader>
         <ModalBody>
           <div className="grid grid-cols-4 gap-4 mb-6">
-            {product?.images?.map((image, index) => (
+            {productDetail?.images?.map((image, index) => (
               <div
                 key={`image-${index}`}
                 className="border rounded-lg p-4 flex items-center justify-center h-24"
@@ -35,37 +45,37 @@ export default function ViewProductModal({ isOpen, onClose, product }) {
           <div className="grid grid-cols-2 gap-4">
             <Input
               label="Product Name"
-              value={product?.name || "N/A"}
+              value={productDetail?.name || "N/A"}
               readOnly
               variant="bordered"
             />
             <Input
               label="Category"
-              value={product?.category?.name || "Uncategorized"}
+              value={productDetail?.category?.name || "Uncategorized"}
               readOnly
               variant="bordered"
             />
             <Input
               label="Stock Quantity"
-              value={product?.stockQuantity || "0"}
+              value={productDetail?.stockQuantity || "0"}
               readOnly
               variant="bordered"
             />
             <Input
-              label="Price"
-              value={product?.price || "N/A"}
+              label="Selling Price"
+              value={productDetail?.sellingPrice || "N/A"}
               readOnly
               variant="bordered"
             />
             <Input
-              label="Order Date"
-              value={product?.orderDate || "N/A"}
+              label="Import Date"
+              value={productDetail?.importDate ? new Date(productDetail.importDate).toLocaleDateString() : "N/A"}
               readOnly
               variant="bordered"
             />
             <Input
               label="Expiration Date"
-              value={product?.expiredDate || "N/A"}
+              value={productDetail?.expireDate ? new Date(productDetail.expireDate).toLocaleDateString() : "N/A"}
               readOnly
               variant="bordered"
             />
@@ -86,4 +96,3 @@ ViewProductModal.propTypes = {
   onClose: PropTypes.func.isRequired,
   product: PropTypes.object,
 };
-  

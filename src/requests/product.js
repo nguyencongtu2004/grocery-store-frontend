@@ -9,9 +9,10 @@ export async function fetchProduct({ signal, page, itemsPerPage }) {
   return response;
 } 
 
-export async function deleteProduct(id) {
-  const response = await httpRequest.delete({
-    url: api.product.deleteById(id),
+export async function getProductById({ id, signal }) {
+  const response = await httpRequest.get({
+    url: api.product.getProduct({ id }),
+    signal,
   });
   return response;
 }
