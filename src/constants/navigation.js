@@ -6,6 +6,7 @@ import {
   Users,
   Star,
   PackageCheck,
+  BookMinus,
 } from "lucide-react";
 import RevenueReportPage from "../pages/RevenueReportPage";
 import WarehouseReportPage from "../pages/WarehouseReportPage";
@@ -15,6 +16,7 @@ import CustomerPage from "../pages/CustomerPage";
 import Employee from "../pages/EmployeePage";
 import PurchaseOrderPage from "../pages/PurchaseOrderPage";
 import ProviderPage from "../pages/ProviderPage";
+import CategoryPage from "../pages/CategoryPage";
 
 export const navigation = [
   {
@@ -64,5 +66,11 @@ export const navigation = [
     route: "/providers",
     icon: PackageCheck,
     element: ProviderPage,
+  },
+  {
+    title: "Category Management",
+    route: "/categories",
+    icon: BookMinus,
+    element: CategoryPage,
   },
 ];

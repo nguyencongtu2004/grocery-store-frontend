@@ -56,5 +56,12 @@ export const api = {
     updateProvider: ({ id }) => `/providers/${id}`,
     deleteProvider: ({ id }) => `/providers/${id}`,
     getProvider: ({ id }) => `/providers/${id}`,
-  }
+  },
+  category: {
+    getAll: () => `/categories`,
+    createCategory: () => `/categories`,
+    updateCategory: ({ id }) => `/categories/${id}`,
+    deleteCategory: ({ id }) => `/categories/${id}`,
+    getCategory: ({ id }) => `/categories/${id}`,
+  },
 };
