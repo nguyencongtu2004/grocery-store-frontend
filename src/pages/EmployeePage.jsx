@@ -43,7 +43,7 @@ export default function EmployeePage() {
     {
       key: "email",
       label: "EMAIL",
-      render: (employee) => <Link href={employee.email}>{employee.email}</Link>,
+      render: (employee) => <Link isExternal href={`mailto:${employee.email}`}>{employee.email}</Link>,
     },
     {
       key: "name",
