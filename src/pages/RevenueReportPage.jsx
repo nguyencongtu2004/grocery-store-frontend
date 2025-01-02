@@ -28,33 +28,36 @@ const RevenueReportPage = () => {
     .toISOString()
     .split('T')[0];
 
-  const [interval, setInterval] = useState('month');
+  const [interval, setInterval] = useState('day');
   const [startDate, setStartDate] = useState(thirtyDaysAgo);
   const [endDate, setEndDate] = useState(today);
 
-  const { data: revenueData, isLoading: isRevenueLoading } = useQuery({
+  const { data: revenueRawData, isLoading: isRevenueLoading } = useQuery({
     queryKey: ['revenueReport', interval, startDate, endDate],
     queryFn: ({ signal }) =>
       fetchRevenueReport({ signal, startDate, endDate, interval, groupBy: 'product' }),
   });
+  const revenueData = revenueRawData?.data || {};
 
-  const { data: profitData, isLoading: isProfitLoading } = useQuery({
+  const { data: profitRawData, isLoading: isProfitLoading } = useQuery({
     queryKey: ['profitReport', interval, startDate, endDate],
     queryFn: ({ signal }) =>
       fetchProfitReport({ signal, startDate, endDate, interval }),
   });
+  const profitData = profitRawData?.data || {};
 
-  const { data: salesData, isLoading: isSalesLoading } = useQuery({
+  const { data: salesRawData, isLoading: isSalesLoading } = useQuery({
     queryKey: ['salesReport', interval, startDate, endDate],
     queryFn: ({ signal }) =>
       fetchSalesReport({ signal, startDate, endDate, interval }),
   });
+  const salesData = salesRawData?.data || {};
 
   const formatChartData = (data) => {
     if (!data?.chartData) return [];
     const { labels, revenue, profit, sales } = data.chartData;
     return labels.map((label, index) => ({
-      name: label,
+      name: new Intl.DateTimeFormat('vi-VN', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(label)),
       revenue: revenue?.[index] || 0,
       profit: profit?.[index] || 0,
       sales: sales?.[index] || 0,
@@ -63,8 +66,11 @@ const RevenueReportPage = () => {
 
   if (isRevenueLoading || isProfitLoading || isSalesLoading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <Spinner size="lg" />
+      <div className="flex justify-center items-center h-96 bg-gray-200 bg-opacity-50 rounded-lg shadow-lg">
+        <div className="text-center">
+          <Spinner size="lg" />
+          <p className="mt-4 text-lg font-semibold">Đang tải dữ liệu...</p>
+        </div>
       </div>
     );
   }
@@ -80,11 +86,12 @@ const RevenueReportPage = () => {
                 label="Interval"
                 value={interval}
                 onChange={(e) => setInterval(e.target.value)}
+                selectedKeys={[interval]}
                 className="flex-1"
               >
-                <SelectItem value="day">Daily</SelectItem>
-                <SelectItem value="month">Monthly</SelectItem>
-                <SelectItem value="year">Yearly</SelectItem>
+                <SelectItem key='day' value="day">Daily</SelectItem>
+                <SelectItem key='month' value="month">Monthly</SelectItem>
+                <SelectItem key='year' value="year">Yearly</SelectItem>
               </Select>
               <Input
                 type="date"

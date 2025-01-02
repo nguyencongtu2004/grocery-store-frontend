@@ -1,32 +1,33 @@
-// import { api } from "../constants/api.js";
-// import { httpRequest } from "./index.js";
+import { api } from "../constants/api.js";
+import { httpRequest } from "./index.js";
+import { mockData } from '../mock_data/mockData.js';
 
-// // Revenue Report
+// Revenue Report
 
-// export async function fetchRevenueReport({ signal, interval, startDate, endDate, groupBy }) {
-//   const response = await httpRequest.get({
-//     url: api.report.revenueReport({ interval, startDate, endDate, groupBy }),
-//     signal,
-//   });
+export async function fetchRevenueReport({ signal, interval, startDate, endDate, groupBy }) {
+  const response = await httpRequest.get({
+    url: api.report.revenueReport({ interval, startDate, endDate, groupBy }),
+    signal,
+  });
 
-//   return response;
-// }
+  return response;
+}
 
-// export async function fetchProfitReport({ signal, startDate, endDate, interval }) {
-//   const response = await httpRequest.get({
-//     url: api.report.profitReport({ startDate, endDate, interval }),
-//     signal,
-//   });
-//   return response;
-// }
+export async function fetchProfitReport({ signal, startDate, endDate, interval }) {
+  const response = await httpRequest.get({
+    url: api.report.profitReport({ startDate, endDate, interval }),
+    signal,
+  });
+  return response;
+}
 
-// export async function fetchSalesReport({ signal, startDate, endDate, interval }) {
-//   const response = await httpRequest.get({
-//     url: api.report.salesReport({ startDate, endDate, interval }),
-//     signal,
-//   });
-//   return response;
-// }
+export async function fetchSalesReport({ signal, startDate, endDate, interval }) {
+  const response = await httpRequest.get({
+    url: api.report.salesReport({ startDate, endDate, interval }),
+    signal,
+  });
+  return response;
+}
 
 // // Stock Report
 
@@ -63,28 +64,28 @@
 // }
 
 
-// mock function
-import { mockData } from '../mock_data/mockData.js';
+// // mock function
+// import { mockData } from '../mock_data/mockData.js';
 
-// Revenue Report
+// // Revenue Report
 
-export async function fetchRevenueReport({ signal, interval, startDate, endDate, groupBy }) {
-  // Simulating API delay
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockData.revenueReport;
-}
+// export async function fetchRevenueReport({ signal, interval, startDate, endDate, groupBy }) {
+//   // Simulating API delay
+//   await new Promise(resolve => setTimeout(resolve, 500));
+//   return mockData.revenueReport;
+// }
 
-export async function fetchProfitReport({ signal, startDate, endDate, interval }) {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockData.profitReport;
-}
+// export async function fetchProfitReport({ signal, startDate, endDate, interval }) {
+//   await new Promise(resolve => setTimeout(resolve, 500));
+//   return mockData.profitReport;
+// }
 
-export async function fetchSalesReport({ signal, startDate, endDate, interval }) {
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return mockData.salesReport;
-}
+// export async function fetchSalesReport({ signal, startDate, endDate, interval }) {
+//   await new Promise(resolve => setTimeout(resolve, 500));
+//   return mockData.salesReport;
+// }
 
-// Stock Report
+// // Stock Report
 
 export async function stockByCategory({ signal, threshold }) {
   await new Promise(resolve => setTimeout(resolve, 500));
