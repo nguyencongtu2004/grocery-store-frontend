@@ -33,7 +33,6 @@ export default function CategoryPage() {
   });
 
   const categories = data?.data.categories || [];
-  console.log('categories', categories);
 
   useEffect(() => {
     if (data?.pagination) {
