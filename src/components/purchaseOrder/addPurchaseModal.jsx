@@ -77,7 +77,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
         toast.error("Kích thước file không được vượt quá 5MB");
         return;
       }
-      
+
       try {
         const imageUrl = URL.createObjectURL(file);
         const updatedLines = [...productLines];
@@ -203,12 +203,12 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
+
     if (!validateForm()) {
       toast.error("Vui lòng kiểm tra lại thông tin nhập");
       return;
     }
-  
+
     try {
       setIsSubmitting(true);
       const formData = new FormData(e.target);
@@ -227,7 +227,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
           expireDate: line.expireDate,
         })),
       };
-  
+
       const response = await createPurchaseOrder({ data: purchaseData });
       if (response.status == "success") {
         toast.success("Tạo phiếu nhập hàng thành công");
@@ -243,7 +243,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
       setIsSubmitting(false);
     }
   };
-  
+
 
   const calculateSuggestedPrice = (index) => {
     const line = productLines[index];
@@ -258,10 +258,10 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      size="2xl" 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
       placement="center"
       classNames={{
         body: "p-5",
@@ -321,8 +321,8 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
               />
 
               {productLines.map((line, productIndex) => (
-                <div 
-                  key={productIndex} 
+                <div
+                  key={productIndex}
                   className="border rounded-lg p-4 space-y-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                 >
                   <div className="flex justify-between items-center">

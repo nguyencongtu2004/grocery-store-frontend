@@ -25,7 +25,8 @@ export async function createInvoice({ data, signal }) {
 // Xuất PDF Invoice
 export async function exportInvoicePDF({ id, signal }) {
   return await httpRequest.get({
-    url: api.invoice.exportPDF(id),
+    url: api.invoice.exportPDF({ id }),
     signal,
+    responseType: 'arraybuffer', 
   });
 }

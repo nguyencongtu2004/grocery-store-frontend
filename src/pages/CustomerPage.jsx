@@ -63,13 +63,13 @@ export default function CustomerPage() {
     {
       key: "phone",
       label: "PHONE",
-      render: (customer) => <p>{customer.phone || 'Chưa cập nhật'}</p>,
+      render: (customer) => <p>{customer.phone || 'Not provided'}</p>,
       align: "center"
     },
     {
       key: "address",
       label: "ADDRESS",
-      render: (customer) => <p className="truncate max-w-xs">{customer.address || 'Chưa cập nhật'}</p>,
+      render: (customer) => <p className="truncate max-w-xs">{customer.address || 'Not provided'}</p>,
     },
     {
       key: "purchaseCount",

@@ -4,7 +4,7 @@ import { httpRequest } from "./index.js";
 // Tải toàn bộ danh sách Purchase Orders
 export async function fetchAllPurchaseOrders({ signal }) {
   const response = await httpRequest.get({
-    url: api.purchaseOrder.getAll({ page: 1, itemsPerPage: 100000, keyword: "" }), // Tải tối đa dữ liệu
+    url: api.purchaseOrder.getAll({ page: 1, itemsPerPage: 10, keyword: "" }), // Tải tối đa dữ liệu
     signal,
   });
 
@@ -23,7 +23,7 @@ export function searchPurchaseOrders(data, keyword) {
 
 // Tạo mới Purchase Order
 export async function createPurchaseOrder({ data, signal }) {
-  return await httpRequest.post({
+  return await httpRequest.postWithFiles({
     url: api.purchaseOrder.create(),
     data,
     signal,

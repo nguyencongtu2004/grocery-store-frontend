@@ -10,11 +10,12 @@ const baseURL = "http://localhost:3000";
 // Đối tượng httpRequest với các phương thức HTTP
 export const httpRequest = {
   baseURL,
-  async get({ url, signal = null }) {
+  async get({ url, signal = null, responseType = "json" }) {
     return this.request({
       method: "get",
       url,
       signal,
+      responseType,
     });
   },
   async post({ url, data, signal = null }) {
@@ -72,7 +73,7 @@ export const httpRequest = {
       signal,
     });
   },
-  async request({ method, url, data = null, signal = null, header = null }) {
+  async request({ method, url, data = null, signal = null, header = null, responseType = "json" }) {
     const fullURL = `${baseURL}${url}`;
     try {
       let headers = {
@@ -95,6 +96,7 @@ export const httpRequest = {
         signal,
         headers,
         withCredentials: true,
+        responseType,
       });
     } catch (error) {
       return error.response;

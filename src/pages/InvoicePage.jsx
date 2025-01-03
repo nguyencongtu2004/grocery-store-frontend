@@ -1,12 +1,13 @@
-import React, { useState, useMemo } from "react";
-import { Pagination, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@nextui-org/react";
-import { Eye, Search, ArrowUpDown } from "lucide-react";
-import { ActionCell, DataTable } from "../components/DataTable";
+import { useState, useMemo } from "react";
+import { Pagination, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button, Image } from "@nextui-org/react";
+import { Eye, Search, ArrowUpDown, Printer } from "lucide-react";
+import { DataTable } from "../components/DataTable";
 import PageTitle from "../components/PageTitle";
 import { useQuery } from "@tanstack/react-query";
-import { fetchInvoices } from "../requests/invoice";
+import { exportInvoicePDF, fetchInvoices } from "../requests/invoice";
 import AddInvoiceModal from "../components/invoice/AddInvoiceModal";
 import InvoiceDetailModal from "../components/invoice/InvoiceDetailModal";
+import Row from "../components/layout/Row";
 
 export default function InvoicePage() {
   const [page, setPage] = useState(1);
@@ -37,8 +38,8 @@ export default function InvoicePage() {
         const quantity = detail?.quantity || 0;
         return sum + price * quantity;
       }, 0);
-      return { 
-        ...invoice, 
+      return {
+        ...invoice,
         totalPrice,
         searchableId: invoice._id?.toString().toLowerCase() || ""
       };
@@ -48,12 +49,12 @@ export default function InvoicePage() {
   // Lọc và sắp xếp invoices
   const filteredAndSortedInvoices = useMemo(() => {
     let result = [...processedInvoices];
-    
+
     // Áp dụng search theo id và tên khách hàng
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase().trim();
-      result = result.filter(invoice => 
-        invoice.searchableId.includes(searchLower) || 
+      result = result.filter(invoice =>
+        invoice.searchableId.includes(searchLower) ||
         invoice.customer?.name?.toLowerCase().includes(searchLower)
       );
     }
@@ -102,6 +103,40 @@ export default function InvoicePage() {
     setPage(1);
   };
 
+  async function handleExport(id) {
+    try {
+      const response = await exportInvoicePDF({ id });
+
+      if (response.headers['content-type'] === 'application/pdf') {
+        // Tạo Blob từ dữ liệu
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+
+        // Tạo URL từ Blob
+        const url = URL.createObjectURL(blob);
+
+        // Mở file PDF trong tab mới
+        const newWindow = window.open(url, '_blank');
+
+        if (newWindow) {
+          // Chờ file PDF được load xong
+          newWindow.onload = () => {
+            // Gọi hộp thoại in
+            newWindow.print();
+          };
+        } else {
+          console.error('Không thể mở tab mới. Hãy kiểm tra cài đặt popup của trình duyệt.');
+        }
+
+        // Xóa URL tạm sau một thời gian
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      } else {
+        console.error('Response không phải là file PDF');
+      }
+    } catch (error) {
+      console.error('Lỗi khi xuất PDF:', error);
+    }
+  }
+
   const columns = [
     {
       key: "index",
@@ -114,9 +149,9 @@ export default function InvoicePage() {
       label: "PRODUCT IMAGE",
       render: (invoice) => (
         invoice?.invoiceDetails?.map((detail, index) => (
-          <img
+          <Image
             key={index}
-            src={detail.product?.images?.[0] || "/placeholder-image.png"}
+            src={detail.product?.images?.[0] || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"}
             alt="Product"
             className="w-10 h-10 object-cover rounded shadow-sm"
           />
@@ -186,7 +221,7 @@ export default function InvoicePage() {
       key: "actions",
       label: "ACTION  ",
       render: (invoice) => (
-        <div className="flex justify-center">
+        <Row className="gap-2">
           <Eye
             size={24}
             className="cursor-pointer text-blue-500 hover:text-blue-700"
@@ -195,7 +230,15 @@ export default function InvoicePage() {
               setIsDetailModalOpen(true);
             }}
           />
-        </div>
+          <Printer
+            size={24}
+            className="cursor-pointer text-blue-500 hover:text-blue-700"
+            onClick={() => {
+              setSelectedInvoice(invoice);
+              handleExport(invoice._id);
+            }}
+          />
+        </Row>
       ),
       align: "center",
     },
@@ -207,12 +250,13 @@ export default function InvoicePage() {
         title="Invoice Management"
         description="List of invoices and information management."
         buttonTitle="Add New Invoice"
-        onButonClick  ={() => {
+        onButonClick={() => {
           setIsAddModalOpen(true);
-          console.log("Button clicked");}}
+          console.log("Button clicked");
+        }}
         isLoading={isLoading}
       />
-      
+
       <div className="flex justify-between items-center gap-4 mb-6">
         <div className="relative flex-1 max-w-2xl">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -227,18 +271,18 @@ export default function InvoicePage() {
 
         <Dropdown>
           <DropdownTrigger>
-            <Button 
-              variant="flat" 
+            <Button
+              variant="flat"
               className="capitalize"
               startIcon={<ArrowUpDown className="h-4 w-4" />}
             >
-              {filters.sortBy === "totalPrice" 
+              {filters.sortBy === "totalPrice"
                 ? (filters.order === "asc" ? "Price: Low to High" : "Price: High to Low")
                 : (filters.order === "asc" ? "Date: Oldest First" : "Date: Newest First")
               }
             </Button>
           </DropdownTrigger>
-          <DropdownMenu 
+          <DropdownMenu
             aria-label="Sort options"
             onAction={(key) => {
               const [sortBy, order] = key.split("-");

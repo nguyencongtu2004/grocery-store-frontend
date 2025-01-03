@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import PageTitle from "../components/PageTitle";
 import SearchInput from "../components/SearchInput";
 import { fetchProviders } from "../requests/provider";
-import { Pagination } from "@nextui-org/react";
+import { Link, Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import AddProviderModal from "../components/provider/AddProviderModal";
 import EditProviderModal from "../components/provider/EditProviderModal";
@@ -64,18 +64,18 @@ export default function ProviderPage() {
     {
       key: "phoneNumber",
       label: "PHONE",
-      render: (provider) => <p>{provider.phoneNumber || 'Chưa cập nhật'}</p>,
+      render: (provider) => <p>{provider.phoneNumber || 'Not provided'}</p>,
       align: "center"
     },
     {
       key: "email",
       label: "EMAIL",
-      render: (provider) => <p>{provider.email || 'Chưa cập nhật'}</p>,
+      render: (provider) => <Link isExternal href={`mailto:${provider.email}`}>{provider.email || 'Not provided'}</Link>,
     },
     {
       key: "address",
       label: "ADDRESS",
-      render: (provider) => <p className="truncate max-w-xs">{provider.address || 'Chưa cập nhật'}</p>,
+      render: (provider) => <p className="truncate max-w-xs">{provider.address || 'Not provided'}</p>,
     },
     {
       key: "actions",

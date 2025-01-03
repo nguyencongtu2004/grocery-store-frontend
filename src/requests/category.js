@@ -1,44 +1,45 @@
 import { api } from "../constants/api.js";
 import { httpRequest } from "./index.js";
 
-// Lấy danh sách danh mục
 export async function fetchCategories({ signal }) {
-  try {
-    const response = await httpRequest.get({
-      url: api.category.getAll(),
-      signal,
-    });
-    console.log("Response from fetchCategories:", response);
-    return response;
-  } catch (error) {
-    console.error("Error in fetchCategories:", error);
-    throw error;
-  }
+  const response = await httpRequest.get({
+    url: api.category.getAll(),
+    signal,
+  });
+
+  return response;
 }
 
-
-// Tạo mới Category
-export async function createCategory({ name, signal }) {
-  return await httpRequest.post({
+export async function createCategory({ name, description, signal }) {
+  const response = await httpRequest.post({
     url: api.category.createCategory(),
-    data: { name },
+    data: { name, description },
     signal,
   });
+  return response;
 }
 
-// Cập nhật Category
-export async function updateCategory({ id, name, signal }) {
-  return await httpRequest.put({
+export async function updateCategory({ id, name, description, signal }) {
+  const response = await httpRequest.put({
     url: api.category.updateCategory({ id }),
-    data: { name },
+    data: { name, description },
     signal,
   });
+  return response;
 }
 
-// Xóa Category
 export async function deleteCategory({ id, signal }) {
-  return await httpRequest.deleteCategory({
-    url: api.category.delete({ id }),
+  const response = await httpRequest.delete({
+    url: api.category.deleteCategory({ id }),
     signal,
   });
+  return response;
+}
+
+export async function fetchCategoryById({ id, signal }) {
+  const response = await httpRequest.get({
+    url: api.category.getCategory({ id }),
+    signal,
+  });
+  return response;
 }

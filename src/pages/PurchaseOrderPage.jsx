@@ -1,4 +1,4 @@
-import { Pagination } from "@nextui-org/react";
+import { Image, Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import PageTitle from "../components/PageTitle";
 import { useState } from "react";
@@ -7,6 +7,7 @@ import { fetchAllPurchaseOrders } from "../requests/purchaseOrder";
 import AddPurchaseModal from "../components/purchaseOrder/AddPurchaseModal";
 import ViewPurchaseModal from "../components/purchaseOrder/ViewPurchaseModal";
 import EditPurchaseModal from "../components/purchaseOrder/EditPurchaseModal";
+import { toast } from "react-hot-toast";
 
 export default function PurchaseOrderPage() {
   const [page, setPage] = useState(1);
@@ -29,7 +30,6 @@ export default function PurchaseOrderPage() {
   });
 
   const purchaseOrder = data?.data || [];
-  console.log(purchaseOrder);
 
   const converDate = (date) => {
     const newDate = new Date(date);
@@ -60,10 +60,10 @@ export default function PurchaseOrderPage() {
     },
     {
       key: "productImage",
-      label: "PRODUCT IMAGE",
+      label: "IMAGE",
       render: (product) => (
-        product?.productDetail?.map((detail, index) => (
-          <img
+        product?.purchaseDetail?.map((detail, index) => (
+          <Image
             key={index}
             src={detail?.images?.[0] || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"}
             alt="Product"
@@ -89,23 +89,33 @@ export default function PurchaseOrderPage() {
     },
     {
       key: "importPrice",
-      label: "IMPORTPRICE",
+      label: "IMPORT PRICE",
       render: (product) => (
         product?.purchaseDetail?.map((detail, idx) => (
-          <p key={idx}>{(detail?.importPrice || 0).toLocaleString()}</p>
+          <p key={idx}>{(detail?.importPrice || 0)}</p>
+        )) || <p>N/A</p>
+      ),
+      align: "center",
+    },
+    {
+      key: "expireDate",
+      label: "EXPIRE DATE",
+      render: (product) => (
+        product?.purchaseDetail?.map((detail, idx) => (
+          <p key={idx}>{detail?.expireDate ? new Intl.DateTimeFormat('vi-VN').format(new Date(detail.expireDate)) : 'N/A'}</p>
         )) || <p>N/A</p>
       ),
       align: "center",
     },
     {
       key: "totalPrice",
-      label: "TOTALPRICE",
+      label: "TOTAL PRICE",
       render: (product) => product?.totalPrice || "-",
       align: "center",
     },
     {
       key: "orderDate",
-      label: "ORDERDATE",
+      label: "ORDER DATE",
       render: (product) => product?.orderDate ? (
         <p className="truncate max-w-xs">{converDate(product.orderDate)}</p>
       ) : "-",
@@ -159,13 +169,11 @@ export default function PurchaseOrderPage() {
             ) : null
           }
         />
-        
+
         <AddPurchaseModal
           isOpen={isAddModalOpen}
-          
           onClose={() =>
             setIsAddModalOpen(false)}
-
           onSuccess={() => {
             setIsAddModalOpen(false);
             refetch(); // Refresh data after adding a purchase

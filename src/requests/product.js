@@ -1,10 +1,26 @@
 import { api } from "../constants/api.js";
 import { httpRequest } from "./index.js";
 
+export async function fetchProduct({ signal, page, itemsPerPage, keyword, categoryId }) {
+  const response = await httpRequest.get({
+    url: api.product.getAll({ page, itemsPerPage, keyword, categoryId }),
+    signal,
+  });
+  return response;
+}
+
+export async function getProductById({ id, signal }) {
+  const response = await httpRequest.get({
+    url: api.product.getProduct({ id }),
+    signal,
+  });
+  return response;
+}
+
 // Tải toàn bộ danh sách Products
 export async function fetchAllProducts({ signal }) {
   const response = await httpRequest.get({
-    url: api.product.getAll({ page: 1, itemsPerPage: 100000, keyword: "" }), // Tải tối đa dữ liệu
+    url: api.product.getAll({ page: 1, itemsPerPage: 1000, keyword: "" }), // Tải tối đa dữ liệu
     signal,
   });
 

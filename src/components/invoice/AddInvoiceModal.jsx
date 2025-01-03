@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { 
-  Modal, 
-  ModalContent, 
-  ModalHeader, 
-  ModalBody, 
+import { useState, useEffect } from 'react';
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
   ModalFooter,
   Button,
   Input,
@@ -16,18 +16,19 @@ import { Trash, ChevronDown } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createInvoice } from "../../requests/invoice";
 import { fetchCustomers } from "../../requests/customer";
-import { fetchAllProducts } from "../../requests/product";
+import { fetchProduct } from "../../requests/product";
 import { fetchCategories } from "../../requests/category";
+import PropTypes from "prop-types";
 
 export default function AddInvoiceModal({ isOpen, onClose }) {
-  const [productLines, setProductLines] = useState([{ 
-    category: "", 
+  const [productLines, setProductLines] = useState([{
+    category: "",
     categoryId: "",
-    product: "", 
+    product: "",
     productId: "",
-    quantity: 1 
+    quantity: 1
   }]);
-  
+
   const [customers, setCustomers] = useState([]);
   const [categories, setCategories] = useState([]);
   const [productsByCategory, setProductsByCategory] = useState({});
@@ -37,16 +38,16 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
   const extractArrayData = (response, path) => {
     if (!response) return [];
     if (Array.isArray(response)) return response;
-    
+
     const pathParts = path.split('.');
     let data = response;
-    
+
     for (const part of pathParts) {
       data = data?.[part];
       if (Array.isArray(data)) return data;
       if (!data) return [];
     }
-    
+
     return [];
   };
 
@@ -65,13 +66,13 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
 
         setCustomers(customersList);
         setCategories(categoriesList);
-        
-        setProductLines([{ 
-          category: "", 
+
+        setProductLines([{
+          category: "",
           categoryId: "",
-          product: "", 
+          product: "",
           productId: "",
-          quantity: 1 
+          quantity: 1
         }]);
         setSelectedCustomer(null);
         setProductsByCategory({});
@@ -87,10 +88,11 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     if (!categoryId) return;
 
     try {
-      const response = await fetchAllProducts({ categoryId });
-      const productsList = extractArrayData(response, 'data.data') || 
-                          extractArrayData(response, 'data') || 
-                          [];
+      const response = await fetchProduct({ categoryId });
+      const productsList = extractArrayData(response, 'data.data') ||
+        extractArrayData(response, 'data') ||
+        [];
+      console.log(productsList);
       
       setProductsByCategory(prev => ({
         ...prev,
@@ -128,7 +130,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     updatedLines[index].product = "";
     updatedLines[index].productId = "";
     setProductLines(updatedLines);
-    
+
     if (!productsByCategory[categoryId]) {
       await fetchProductsByCategory(categoryId);
     }
@@ -138,7 +140,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     const currentLine = productLines[index];
     const productsForCategory = productsByCategory[currentLine.categoryId] || [];
     const product = productsForCategory.find(p => p._id === productId);
-    
+
     if (!product) return;
 
     const updatedLines = [...productLines];
@@ -161,7 +163,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
+
     if (!selectedCustomer) {
       alert("Please select a customer");
       return;
@@ -183,13 +185,13 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
 
     console.log(requestData);
 
-    addInvoice(requestData);
+    addInvoice({ data: requestData });
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
       size="2xl"
       scrollBehavior="inside"
     >
@@ -200,15 +202,15 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
             <div className="space-y-6">
               <Dropdown>
                 <DropdownTrigger>
-                  <Button 
-                    variant="bordered" 
+                  <Button
+                    variant="bordered"
                     className="w-full justify-between"
                     endContent={<ChevronDown className="text-small" />}
                   >
                     {selectedCustomer ? selectedCustomer.name : "Select customer"}
                   </Button>
                 </DropdownTrigger>
-                <DropdownMenu 
+                <DropdownMenu
                   aria-label="Customer selection"
                   selectionMode="single"
                   className="max-h-64 overflow-y-auto"
@@ -231,15 +233,15 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                   <div className="space-y-4">
                     <Dropdown>
                       <DropdownTrigger>
-                        <Button 
-                          variant="bordered" 
+                        <Button
+                          variant="bordered"
                           className="w-full justify-between"
                           endContent={<ChevronDown className="text-small" />}
                         >
                           {line.category || "Select category"}
                         </Button>
                       </DropdownTrigger>
-                      <DropdownMenu 
+                      <DropdownMenu
                         aria-label="Category selection"
                         selectionMode="single"
                         className="max-h-64 overflow-y-auto"
@@ -259,8 +261,8 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
 
                     <Dropdown isDisabled={!line.categoryId}>
                       <DropdownTrigger>
-                        <Button 
-                          variant="bordered" 
+                        <Button
+                          variant="bordered"
                           className="w-full justify-between"
                           endContent={<ChevronDown className="text-small" />}
                           disabled={!line.categoryId}
@@ -268,7 +270,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                           {line.product || "Select product"}
                         </Button>
                       </DropdownTrigger>
-                      <DropdownMenu 
+                      <DropdownMenu
                         aria-label="Product selection"
                         selectionMode="single"
                         className="max-h-64 overflow-y-auto"
@@ -333,3 +335,8 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     </Modal>
   );
 }
+
+AddInvoiceModal.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  onClose: PropTypes.func.isRequired,
+};

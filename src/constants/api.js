@@ -38,7 +38,7 @@ export const api = {
     delete: ({ id }) => `/customers/${id}`
   },
   product: {
-    getAll: ({ page, itemsPerPage, keyword }) => `/products?page=${page}&limit=${itemsPerPage}&keyword=${keyword ?? ""}`,
+    getAll: ({ page, itemsPerPage, keyword, categoryId }) => `/products?page=${page}&limit=${itemsPerPage}&name=${keyword ?? ""}&categoryId=${categoryId ?? ""}`,
     getDetail: ({ id }) => `/products/${id}`,
     updateById: (id) => `/products/${id}`,
   },

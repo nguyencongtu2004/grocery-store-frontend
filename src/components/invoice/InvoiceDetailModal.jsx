@@ -1,7 +1,42 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Image } from "@nextui-org/react";
 import PropTypes from "prop-types";
+import { exportInvoicePDF } from "../../requests/invoice";
 
 export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
+  async function handleExport(id) {
+    try {
+      const response = await exportInvoicePDF({ id });
+
+      if (response.headers['content-type'] === 'application/pdf') {
+        // Tạo Blob từ dữ liệu
+        const blob = new Blob([response.data], { type: 'application/pdf' });
+
+        // Tạo URL từ Blob
+        const url = URL.createObjectURL(blob);
+
+        // Mở file PDF trong tab mới
+        const newWindow = window.open(url, '_blank');
+
+        if (newWindow) {
+          // Chờ file PDF được load xong
+          newWindow.onload = () => {
+            // Gọi hộp thoại in
+            newWindow.print();
+          };
+        } else {
+          console.error('Không thể mở tab mới. Hãy kiểm tra cài đặt popup của trình duyệt.');
+        }
+
+        // Xóa URL tạm sau một thời gian
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+      } else {
+        console.error('Response không phải là file PDF');
+      }
+    } catch (error) {
+      console.error('Lỗi khi xuất PDF:', error);
+    }
+  }
+
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="lg" placement="center" scrollBehavior="inside">
       <ModalContent>
@@ -35,9 +70,9 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
                     <strong>Date:</strong> {new Date(invoice.createdAt).toLocaleString()}
                   </p>
                   <p>
-                    <strong>Total Price: </strong> 
+                    <strong>Total Price: </strong>
                     <span className="text-blue-600 font-medium">
-                      {(invoice.totalPrice || 0).toLocaleString()} 
+                      {(invoice.totalPrice || 0).toLocaleString()}
                     </span>
                   </p>
                 </div>
@@ -52,8 +87,8 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
                       {invoice.invoiceDetails.map((detail, index) => (
                         <li key={index} className="py-3 flex justify-between items-center">
                           <div className="flex items-center space-x-4">
-                            <img
-                              src={detail.product?.images?.[0] || "/placeholder-image.png"}
+                            <Image
+                              src={detail.product?.images?.[0] || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"}
                               alt="Product"
                               className="w-16 h-16 object-cover rounded-lg shadow-sm"
                             />
@@ -63,10 +98,10 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="font-semibold text-gray-700">
+                            <p className="text-sm text-gray-500">
                               {detail.product?.sellingPrice?.toLocaleString() || "0"} VND
                             </p>
-                            <p className="text-sm text-gray-500">
+                            <p className="font-semibold text-gray-700">
                               Total:{" "}
                               {(detail.quantity * (detail.product?.sellingPrice || 0)).toLocaleString()} VND
                             </p>
@@ -85,6 +120,9 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
           )}
         </ModalBody>
         <ModalFooter>
+          <Button onClick={() => handleExport(invoice._id)} color="success" auto>
+            Print Invoice
+          </Button>
           <Button onClick={onClose} color="primary" auto>
             Close
           </Button>
