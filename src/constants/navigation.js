@@ -26,7 +26,7 @@ export const navigation = [
     route: "/revenue-report",
     icon: BarChart2,
     element: RevenueReportPage,
-    role: ["manager", "sale"],
+    role: ["manager"],
   },
   {
     title: "Warehouse report",
@@ -68,21 +68,21 @@ export const navigation = [
     route: "/purchase-order",
     icon: ShoppingCart,
     element: PurchaseOrderPage,
-    role: ["manager", "sale"],
+    role: ["manager", "warehouse"],
   },
   {
     title: "Provider Management",
     route: "/providers",
     icon: PackageCheck,
     element: ProviderPage,
-    role: ["manager"],
+    role: ["manager", "warehouse"],
   },
   {
     title: "Category Management",
     route: "/categories",
     icon: BookMinus,
     element: CategoryPage,
-    role: ["manager"],
+    role: ["manager", "warehouse"],
   },
   {
     title: "Profile",

@@ -35,25 +35,30 @@ const WarehouseReportPage = () => {
   const [startDate, setStartDate] = useState(thirtyDaysAgo);
   const [endDate, setEndDate] = useState(today);
 
-  const { data: stockData, isLoading: isStockLoading } = useQuery({
+  const { data: stockRawData, isLoading: isStockLoading } = useQuery({
     queryKey: ['stockByCategory', threshold],
     queryFn: ({ signal }) => stockByCategory({ signal, threshold }),
   });
+  const stockData = stockRawData?.data || {};
 
-  const { data: expiringData, isLoading: isExpiringLoading } = useQuery({
+  const { data: expiringRawData, isLoading: isExpiringLoading } = useQuery({
     queryKey: ['expiringProducts', startDate, endDate],
     queryFn: ({ signal }) => expiringProducts({ signal, startDate, endDate }),
   });
+  const expiringData = expiringRawData?.data || {};
 
-  const { data: importData, isLoading: isImportLoading } = useQuery({
+  const { data: importRawData, isLoading: isImportLoading } = useQuery({
     queryKey: ['importByProvider', startDate, endDate],
     queryFn: ({ signal }) => importByProvider({ signal, startDate, endDate }),
   });
+  const importData = importRawData?.data || {};
+  console.log('importData', importData);
 
-  const { data: topSellingData, isLoading: isTopSellingLoading } = useQuery({
+  const { data: topSellingRawData, isLoading: isTopSellingLoading } = useQuery({
     queryKey: ['topSellingProducts', startDate, endDate],
     queryFn: ({ signal }) => topSellingProducts({ signal, startDate, endDate }),
   });
+  const topSellingData = topSellingRawData?.data || {};
 
   const formatStockData = (data) => {
     if (!data?.categories) return [];
@@ -73,6 +78,8 @@ const WarehouseReportPage = () => {
     return data.providers.map(provider => ({
       name: provider.name,
       value: provider.totalImportPrice,
+      purchaseOrders: provider.purchaseOrders,
+      providerId: provider.providerId
     }));
   };
 
@@ -163,6 +170,20 @@ const WarehouseReportPage = () => {
                       <Tooltip />
                     </PieChart>
                   </ResponsiveContainer>
+                  <div className="mt-4">
+                    {formatImportData(importData).map((entry) => (
+                      <Column key={entry.providerId} className="mb-4 p-2 border rounded shadow-sm">
+                        <span className="font-bold text-lg">{entry.name}</span>
+                        <span className="text-gray-600">{entry.value} units</span>
+                        {entry.purchaseOrders.map((order) => (
+                          <div key={order.orderId} className="mt-2">
+                            <p className="text-sm text-gray-500">{new Date(order.orderDate).toLocaleDateString()}</p>
+                            <span className="font-semibold">${order.totalPrice.toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </Column>
+                    ))}
+                  </div>
                 </div>
               </CardBody>
             </Card>
@@ -188,8 +209,8 @@ const WarehouseReportPage = () => {
                 <div className="mt-2 max-h-[200px] overflow-y-auto">
                   {formatTopSellingData(topSellingData).map((product) => (
                     <div key={product.productId} className="flex justify-between mb-2">
-                      <span>{product.name}</span>
-                      <span>{product.quantitySold} units</span>
+                      <span>{product.productName}</span>
+                      <span>{product.totalQuantitySold} units</span>
                     </div>
                   ))}
                 </div>
@@ -203,4 +224,3 @@ const WarehouseReportPage = () => {
 };
 
 export default WarehouseReportPage;
-

@@ -125,7 +125,7 @@ export default function ProductPage() {
         value={searchKeyword}
         onValueChange={setSearchKeyword}
         onSearch={handleSearch}
-        placeholder="Search customers by phone number..."
+        placeholder="Search products by name..."
         isLoading={isLoading}
       />
       <DataTable

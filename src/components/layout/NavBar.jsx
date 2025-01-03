@@ -15,7 +15,7 @@ export default function NavBar({ className }) {
   });
 
   const role = data?.data?.user.role;
-  // const role = "warehouse"; // for testing
+  // const role = "sale"; // for testing
   const filteredNavigation = navigation.filter((item) => item.role.includes(role));
 
   return (
