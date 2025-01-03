@@ -1,241 +1,497 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Select, SelectItem } from "@nextui-org/react";
-import { Trash, Image as ImageIcon } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Tooltip } from "@nextui-org/react";
+import { Trash, Image as ImageIcon, ChevronDown, HelpCircle, Calculator } from "lucide-react";
 import PropTypes from "prop-types";
+import { useState, useEffect, useCallback } from "react";
+import { fetchProviders } from "../../requests/provider";
+import { fetchCategories } from "../../requests/category";
+import { updatePurchaseOrder } from "../../requests/purchaseOrder";
+import { toast } from "react-hot-toast";
 
-export default function EditPurchaseModal({ isOpen, onClose, purchaseOrder, onUpdate }) {
-  const [formData, setFormData] = useState({
-    provider: "",
-    orderDate: "",
-    products: []
-  });
+export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchaseOrder }) {
+  const [providers, setProviders] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedProvider, setSelectedProvider] = useState(null);
+  const [productLines, setProductLines] = useState([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    if (purchaseOrder) {
-      setFormData({
-        provider: purchaseOrder.provider || "",
-        orderDate: purchaseOrder.orderDate || "",
-        products: purchaseOrder.products.map(product => ({
-          ...product,
-          images: [...(product.images || [null, null, null, null])].slice(0, 4),
-        }))
-      });
-    }
-  }, [purchaseOrder]);
+    const fetchInitialData = async () => {
+      if (!isOpen) return;
+      try {
+        const [providersRes, categoriesRes] = await Promise.all([
+          fetchProviders({}),
+          fetchCategories({})
+        ]);
+        setProviders(providersRes?.data || []);
+        setCategories(categoriesRes?.data?.categories || []);
+        
+        // Initialize form with purchase order data if available
+        if (purchaseOrder) {
+          setSelectedProvider(purchaseOrder.provider);
+          setProductLines(purchaseOrder.purchaseDetail.map(detail => ({
+            id: detail._id,
+            name: detail.name,
+            category: detail.category,
+            categoryId: detail.category?._id,
+            importPrice: detail.importPrice?.toString(),
+            stockQuantity: detail.quantity?.toString(),
+            sellingPrice: detail.sellingPrice?.toString(),
+            expireDate: detail.expireDate?.split('T')[0],
+            images: detail.images || [],
+            profit: detail.sellingPrice - detail.importPrice,
+            profitMargin: ((detail.sellingPrice - detail.importPrice) / detail.importPrice * 100) || 0
+          })));
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+        toast.error("Failed to load initial data");
+      }
+    };
+    fetchInitialData();
+  }, [isOpen, purchaseOrder]);
 
-  const handleImageChange = (productIndex, imageIndex, e) => {
+  const calculateProfit = useCallback((line) => {
+    const importPrice = Number(line.importPrice) || 0;
+    const sellingPrice = Number(line.sellingPrice) || 0;
+    const profit = sellingPrice - importPrice;
+    const profitMargin = importPrice ? (profit / importPrice) * 100 : 0;
+    return { profit, profitMargin };
+  }, []);
+
+  const handleImageUpload = async (productIndex, e) => {
     const file = e.target.files[0];
     if (file) {
       if (file.size > 5 * 1024 * 1024) {
-        alert("Kích thước ảnh không được vượt quá 5MB");
+        toast.error("File size cannot exceed 5MB");
         return;
       }
       
-      const newProducts = [...formData.products];
-      newProducts[productIndex].images[imageIndex] = file;
-      setFormData({ ...formData, products: newProducts });
+      try {
+        const imageUrl = URL.createObjectURL(file);
+        const updatedLines = [...productLines];
+        updatedLines[productIndex].images = [imageUrl];
+        setProductLines(updatedLines);
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        toast.error("Failed to upload image");
+      }
+    }
+  };
+
+  const handleCategorySelect = (index, categoryId) => {
+    const category = categories.find(c => c._id === categoryId);
+    if (!category) return;
+
+    const updatedLines = [...productLines];
+    updatedLines[index].category = { _id: category._id };
+    updatedLines[index].categoryId = category._id;
+    setProductLines(updatedLines);
+    setErrors(prev => ({ ...prev, [`category-${index}`]: null }));
+  };
+
+  const addProductLine = () => {
+    setProductLines([...productLines, {
+      name: "",
+      category: "",
+      categoryId: "",
+      importPrice: "",
+      stockQuantity: "",
+      sellingPrice: "",
+      expireDate: "",
+      images: [],
+      profit: 0,
+      profitMargin: 0
+    }]);
+  };
+
+  const deleteProductLine = (index) => {
+    if (productLines.length > 1) {
+      const newLines = [...productLines];
+      newLines.splice(index, 1);
+      setProductLines(newLines);
+      
+      const newErrors = { ...errors };
+      Object.keys(newErrors).forEach(key => {
+        if (key.endsWith(`-${index}`)) {
+          delete newErrors[key];
+        }
+      });
+      setErrors(newErrors);
+    } else {
+      toast.error("At least one product is required");
     }
   };
 
   const handleInputChange = (index, field, value) => {
-    const newProducts = [...formData.products];
-    newProducts[index][field] = value;
-    setFormData({ ...formData, products: newProducts });
+    const updatedLines = [...productLines];
+    updatedLines[index][field] = value;
+
+    if (field === 'importPrice' || field === 'sellingPrice') {
+      const { profit, profitMargin } = calculateProfit({
+        ...updatedLines[index],
+        [field]: value
+      });
+      updatedLines[index].profit = profit;
+      updatedLines[index].profitMargin = profitMargin;
+    }
+
+    setProductLines(updatedLines);
+    setErrors(prev => ({ ...prev, [`${field}-${index}`]: null }));
   };
 
-  const addProductLine = () => {
-    setFormData({
-      ...formData,
-      products: [
-        ...formData.products,
-        {
-          images: [null, null, null, null],
-          productName: "",
-          category: "",
-          importPrice: "",
-          stockQuantity: "",
-          sellingPrice: "",
-          expireDate: ""
+  const validateForm = () => {
+    const newErrors = {};
+    let isValid = true;
+
+    if (!selectedProvider) {
+      newErrors.provider = "Please select a supplier";
+      isValid = false;
+    }
+
+    productLines.forEach((line, index) => {
+      if (!line.name) {
+        newErrors[`name-${index}`] = "Product name is required";
+        isValid = false;
+      }
+      if (!line.categoryId) {
+        newErrors[`category-${index}`] = "Category is required";
+        isValid = false;
+      }
+      if (!line.importPrice || Number(line.importPrice) <= 0) {
+        newErrors[`importPrice-${index}`] = "Import price must be greater than 0";
+        isValid = false;
+      }
+      if (!line.stockQuantity || Number(line.stockQuantity) <= 0) {
+        newErrors[`stockQuantity-${index}`] = "Quantity must be greater than 0";
+        isValid = false;
+      }
+      if (!line.sellingPrice || Number(line.sellingPrice) <= 0) {
+        newErrors[`sellingPrice-${index}`] = "Selling price must be greater than 0";
+        isValid = false;
+      }
+      if (Number(line.sellingPrice) <= Number(line.importPrice)) {
+        newErrors[`sellingPrice-${index}`] = "Selling price must be higher than import price";
+        isValid = false;
+      }
+      if (!line.expireDate) {
+        newErrors[`expireDate-${index}`] = "Expiration date is required";
+        isValid = false;
+      } else {
+        const expireDate = new Date(line.expireDate);
+        const today = new Date();
+        if (expireDate <= today) {
+          newErrors[`expireDate-${index}`] = "Expiration date must be in the future";
+          isValid = false;
         }
-      ]
+      }
     });
+
+    setErrors(newErrors);
+    return isValid;
   };
 
-  const deleteProductLine = (index) => {
-    const newProducts = formData.products.filter((_, i) => i !== index);
-    setFormData({ ...formData, products: newProducts });
-  };
-
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const updatedData = {
-      ...formData,
-      products: formData.products.map(product => ({
-        ...product,
-        importPrice: Number(product.importPrice),
-        stockQuantity: Number(product.stockQuantity),
-        sellingPrice: Number(product.sellingPrice),
-        images: product.images
-          .map(img => img instanceof File ? URL.createObjectURL(img) : img)
-          .filter(Boolean)
-      }))
-    };
-    onUpdate(updatedData);
-    onClose();
+    
+    if (!validateForm()) {
+      toast.error("Please check your input");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      const formData = new FormData(e.target);
+      const updateData = {
+        id: purchaseOrder._id,
+        provider: selectedProvider._id,
+        orderDate: formData.get("orderDate"),
+        purchaseDetail: productLines.map(line => ({
+          id: line.id, // Include existing line ID if available
+          name: line.name.trim(),
+          sellingPrice: Number(line.sellingPrice),
+          quantity: Number(line.stockQuantity),
+          category: {
+            _id: line.category._id
+          },
+          images: line.images,
+          importPrice: Number(line.importPrice),
+          expireDate: line.expireDate
+        }))
+      };
+
+      const response = await updatePurchaseOrder(updateData);
+
+      console.log(response);
+
+      if (response.status == "success") {
+        toast.success("Purchase order updated successfully");
+        onSuccess?.();
+        onClose();
+      }
+    } catch (error) {
+      console.error("Error updating purchase order:", error);
+      toast.error("Failed to update purchase order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const calculateSuggestedPrice = (index) => {
+    const line = productLines[index];
+    if (!line.importPrice) {
+      toast.error("Please enter import price first");
+      return;
+    }
+
+    const importPrice = Number(line.importPrice);
+    const suggestedPrice = Math.ceil(importPrice * 1.3 / 1000) * 1000; // 30% markup rounded to thousands
+    handleInputChange(index, "sellingPrice", suggestedPrice.toString());
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" placement="center">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      size="2xl" 
+      placement="center"
+      classNames={{
+        body: "p-5",
+        backdrop: "bg-[#292f46]/50 backdrop-opacity-40",
+        base: "border-[#292f46] bg-white dark:bg-[#19172c] rounded-lg",
+        closeButton: "hover:bg-white/5 active:bg-white/10"
+      }}
+    >
       <ModalContent>
         <form onSubmit={handleSubmit}>
           <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-bold">Sửa phiếu nhập hàng</h2>
+            <h2 className="text-xl font-bold">Edit Purchase Order</h2>
           </ModalHeader>
-          
           <ModalBody>
             <div className="grid gap-4">
+              <div className="space-y-2">
+                <Dropdown>
+                  <DropdownTrigger>
+                    <Input
+                      label="Supplier"
+                      placeholder="Select supplier"
+                      variant="bordered"
+                      value={selectedProvider?.name || ""}
+                      readOnly
+                      endContent={<ChevronDown className="text-small" />}
+                      color={errors.provider ? "danger" : "default"}
+                      errorMessage={errors.provider}
+                      className="w-full"
+                    />
+                  </DropdownTrigger>
+                  <DropdownMenu
+                    aria-label="Provider selection"
+                    selectionMode="single"
+                    className="max-h-64 overflow-y-auto"
+                    selectedKeys={selectedProvider ? [selectedProvider._id] : []}
+                    onSelectionChange={(keys) => {
+                      const selectedId = Array.from(keys)[0];
+                      setSelectedProvider(providers.find(p => p._id === selectedId));
+                      setErrors(prev => ({ ...prev, provider: null }));
+                    }}
+                  >
+                    {providers.map((provider) => (
+                      <DropdownItem key={provider._id} className="capitalize">
+                        {provider.name}
+                      </DropdownItem>
+                    ))}
+                  </DropdownMenu>
+                </Dropdown>
+              </div>
+
               <Input
-                autoFocus
-                label="Nhà cung cấp"
-                placeholder="Ví dụ: Nam Ngư"
-                variant="bordered"
-                value={formData.provider}
-                onChange={(e) => setFormData({ ...formData, provider: e.target.value })}
-                required
-              />
-              <Input
-                label="Ngày nhập hàng"
+                name="orderDate"
+                label="Order Date"
                 type="date"
                 variant="bordered"
-                value={formData.orderDate}
-                onChange={(e) => setFormData({ ...formData, orderDate: e.target.value })}
+                defaultValue={purchaseOrder?.orderDate?.split('T')[0]}
                 required
               />
-              
-              {formData.products.map((product, productIndex) => (
-                <div key={productIndex} className="border rounded-lg p-4 space-y-4">
+
+              {productLines.map((line, productIndex) => (
+                <div 
+                  key={line.id || productIndex} 
+                  className="border rounded-lg p-4 space-y-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
+                >
                   <div className="flex justify-between items-center">
-                    <h3 className="text-lg font-medium">Sản phẩm {productIndex + 1}</h3>
-                    {formData.products.length > 1 && (
-                      <Button
-                        isIconOnly
-                        color="danger"
-                        variant="light"
-                        onPress={() => deleteProductLine(productIndex)}
-                      >
-                        <Trash size={20} />
-                      </Button>
-                    )}
+                    <h3 className="text-lg font-medium flex items-center gap-2">
+                      Product {productIndex + 1}
+                      {line.profit > 0 && (
+                        <Tooltip content={`Profit: $${line.profit.toLocaleString()} (${line.profitMargin.toFixed(1)}%)`}>
+                          <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">
+                            +{line.profitMargin.toFixed(1)}%
+                          </span>
+                        </Tooltip>
+                      )}
+                    </h3>
+                    <Button
+                      isIconOnly
+                      color="danger"
+                      variant="light"
+                      onPress={() => deleteProductLine(productIndex)}
+                    >
+                      <Trash size={20} />
+                    </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                    {product.images.map((image, imageIndex) => (
-                      <div
-                        key={`image-${imageIndex}`}
-                        className="border-dashed border rounded-md p-4 flex flex-col items-center gap-2"
-                      >
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(e) => handleImageChange(productIndex, imageIndex, e)}
-                          className="hidden"
-                          id={`image-${productIndex}-${imageIndex}`}
-                        />
-                        <label
-                          htmlFor={`image-${productIndex}-${imageIndex}`}
-                          className="cursor-pointer flex flex-col items-center gap-2"
-                        >
-                          {image ? (
-                            <img
-                              src={image instanceof File ? URL.createObjectURL(image) : image}
-                              alt={`Preview ${imageIndex + 1}`}
-                              className="w-20 h-20 object-cover rounded"
-                            />
-                          ) : (
-                            <>
-                              <ImageIcon className="w-8 h-8 text-gray-400" />
-                              <span className="text-sm text-gray-500">Hình ảnh {imageIndex + 1}</span>
-                            </>
-                          )}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
-
+                  {/* Product form fields - similar to AddPurchaseModal */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                      label="Tên sản phẩm"
-                      placeholder="Ví dụ: Nước tương"
+                      label="Product Name"
+                      placeholder="Enter product name"
                       variant="bordered"
-                      value={product.productName}
-                      onChange={(e) => handleInputChange(productIndex, "productName", e.target.value)}
-                      required
+                      value={line.name}
+                      onChange={(e) => handleInputChange(productIndex, "name", e.target.value)}
+                      color={errors[`name-${productIndex}`] ? "danger" : "default"}
+                      errorMessage={errors[`name-${productIndex}`]}
+                      className="w-full"
                     />
+
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <Input
+                          label="Category"
+                          placeholder="Select category"
+                          variant="bordered"
+                          value={categories.find(c => c._id === line.categoryId)?.name || ""}
+                          readOnly
+                          endContent={<ChevronDown className="text-small" />}
+                          color={errors[`category-${productIndex}`] ? "danger" : "default"}
+                          errorMessage={errors[`category-${productIndex}`]}
+                        />
+                      </DropdownTrigger>
+                      <DropdownMenu
+                        aria-label="Category selection"
+                        selectionMode="single"
+                        className="max-h-64 overflow-y-auto"
+                        selectedKeys={line.categoryId ? [line.categoryId] : []}
+                        onSelectionChange={(keys) => {
+                          const selectedId = Array.from(keys)[0];
+                          handleCategorySelect(productIndex, selectedId);
+                        }}
+                      >
+                        {categories.map((category) => (
+                          <DropdownItem key={category._id} className="capitalize">
+                            {category.name}
+                          </DropdownItem>
+                        ))}
+                      </DropdownMenu>
+                    </Dropdown>
+
+                    <div className="flex gap-2 items-end">
+                      <Input
+                        label="Import Price ($)"
+                        type="number"
+                        placeholder="Enter import price"
+                        variant="bordered"
+                        value={line.importPrice}
+                        onChange={(e) => handleInputChange(productIndex, "importPrice", e.target.value)}
+                        color={errors[`importPrice-${productIndex}`] ? "danger" : "default"}
+                        errorMessage={errors[`importPrice-${productIndex}`]}
+                        className="flex-1"
+                      />
+                      <Tooltip content="Calculate suggested selling price (30% markup)">
+                        <Button
+                          isIconOnly
+                          variant="light"
+                          onPress={() => calculateSuggestedPrice(productIndex)}
+                        >
+                          <Calculator size={20} />
+                        </Button>
+                      </Tooltip>
+                    </div>
+
                     <Input
-                      label="Danh mục"
-                      placeholder="Ví dụ: Gia vị"
-                      variant="bordered"
-                      value={product.category}
-                      onChange={(e) => handleInputChange(productIndex, "category", e.target.value)}
-                      required
-                    />
-                    <Input
-                      label="Giá nhập hàng"
+                      label="Stock Quantity"
                       type="number"
-                      placeholder="Ví dụ: 15000"
+                      placeholder="Enter quantity"
                       variant="bordered"
-                      value={product.importPrice}
-                      onChange={(e) => handleInputChange(productIndex, "importPrice", e.target.value)}
-                      required
-                    />
-                    <Input
-                      label="Số lượng nhập"
-                      type="number"
-                      placeholder="Ví dụ: 150"
-                      variant="bordered"
-                      value={product.stockQuantity}
+                      value={line.stockQuantity}
                       onChange={(e) => handleInputChange(productIndex, "stockQuantity", e.target.value)}
-                      required
+                      color={errors[`stockQuantity-${productIndex}`] ? "danger" : "default"}
+                      errorMessage={errors[`stockQuantity-${productIndex}`]}
                     />
+
                     <Input
-                      label="Giá bán"
+                      label="Selling Price ($)"
                       type="number"
-                      placeholder="Ví dụ: 18000"
+                      placeholder="Enter selling price"
                       variant="bordered"
-                      value={product.sellingPrice}
+                      value={line.sellingPrice}
                       onChange={(e) => handleInputChange(productIndex, "sellingPrice", e.target.value)}
-                      required
+                      color={errors[`sellingPrice-${productIndex}`] ? "danger" : "default"}
+                      errorMessage={errors[`sellingPrice-${productIndex}`]}
                     />
+
                     <Input
-                      label="Ngày hết hạn"
+                      label="Expiration Date"
                       type="date"
                       variant="bordered"
-                      value={product.expireDate}
+                      value={line.expireDate}
                       onChange={(e) => handleInputChange(productIndex, "expireDate", e.target.value)}
-                      required
+                      color={errors[`expireDate-${productIndex}`] ? "danger" : "default"}
+                      errorMessage={errors[`expireDate-${productIndex}`]}
                     />
+
+                    <div className="flex items-center gap-2 col-span-2">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        id={`image-upload-${productIndex}`}
+                        onChange={(e) => handleImageUpload(productIndex, e)}
+                      />
+                      <Button
+                        as="label"
+                        htmlFor={`image-upload-${productIndex}`}
+                        variant="flat"
+                        startContent={<ImageIcon size={20} />}
+                        className="cursor-pointer"
+                      >
+                        {line.images?.length ? 'Change Image' : 'Upload Image'}
+                      </Button>
+                      {line.images?.length > 0 && (
+                        <div className="h-20 w-20 relative">
+                          <img
+                            src={line.images[0]}
+                            alt={`Product ${productIndex + 1}`}
+                            className="h-full w-full object-cover rounded"
+                          />
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
 
               <Button
-                className="mx-auto flex items-center gap-2 border border-dashed border-blue-400 py-1 rounded-md hover:bg-blue-50"
-                color="default"
-                variant="light"
+                variant="flat"
                 onPress={addProductLine}
+                className="w-full"
               >
-                <span className="text-blue-500 font-bold text-sm">+</span>
-                <span className="text-blue-600 text-sm">Thêm sản phẩm</span>
+                Add Another Product
               </Button>
             </div>
           </ModalBody>
-          
+
           <ModalFooter>
-            <Button color="danger" variant="light" onPress={onClose}>
-              Hủy
+            <Button
+              variant="light"
+              onPress={onClose}
+            >
+              Cancel
             </Button>
-            <Button color="primary" type="submit">
-              Sửa phiếu nhập hàng
+            <Button
+              color="primary"
+              type="submit"
+              isLoading={isSubmitting}
+            >
+              Update Purchase Order
             </Button>
           </ModalFooter>
         </form>
@@ -247,20 +503,22 @@ export default function EditPurchaseModal({ isOpen, onClose, purchaseOrder, onUp
 EditPurchaseModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
-  onUpdate: PropTypes.func.isRequired,
+  onSuccess: PropTypes.func,
   purchaseOrder: PropTypes.shape({
-    provider: PropTypes.string.isRequired,
+    _id: PropTypes.string.isRequired,
+    provider: PropTypes.object.isRequired,
     orderDate: PropTypes.string.isRequired,
-    products: PropTypes.arrayOf(
+    purchaseDetail: PropTypes.arrayOf(
       PropTypes.shape({
-        images: PropTypes.arrayOf(PropTypes.string),
-        productName: PropTypes.string.isRequired,
-        category: PropTypes.string.isRequired,
+        _id: PropTypes.string,
+        name: PropTypes.string.isRequired,
+        category: PropTypes.object.isRequired,
         importPrice: PropTypes.number.isRequired,
-        stockQuantity: PropTypes.number.isRequired,
+        quantity: PropTypes.number.isRequired,
         sellingPrice: PropTypes.number.isRequired,
-        expireDate: PropTypes.string.isRequired
+        expireDate: PropTypes.string.isRequired,
+        images: PropTypes.arrayOf(PropTypes.string)
       })
     ).isRequired
-  })
+  }).isRequired
 };

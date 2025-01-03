@@ -1,46 +1,31 @@
-  import { api } from "../constants/api.js";
-  import { httpRequest } from "./index.js";
+import { api } from "../constants/api.js";
+import { httpRequest } from "./index.js";
 
-  export const invoiceService = {
-    getInvoices: async ({ signal, page, itemsPerPage, searchTerm = "", filter = {} }) => {
-      const { sortBy = "createdAt", order = "desc" } = filter;
-      const response = await httpRequest.get({
-        url: api.invoice.getAll({ page, itemsPerPage, searchTerm, sortBy, order }),
-        signal,
-      });
-      return response;
-    },
+// Lấy danh sách hóa đơn
+export async function fetchInvoices({ signal, page = 1, itemsPerPage = 10, searchTerm = "", sortBy, order }) {
+  const processedSearchTerm = searchTerm.trim().split(/\s+/).join(' ');
 
-    createInvoice: async (data) => {
-      const response = await httpRequest.post({
-        url: api.invoice.create(),
-        data,
-      });
-      return response;
-    },
+  const response = await httpRequest.get({
+    url: api.invoice.getAll({ page, itemsPerPage, searchTerm: processedSearchTerm, sortBy, order }),
+    signal,
+  });
 
-    exportPDF: async (id) => {
-      const response = await httpRequest.get({
-        url: api.invoice.exportPDF(id),
-        responseType: "blob", // This is used for downloading files
-      });
-      return response;
-    },
-  };
+  return response;
+}
 
-  export const customerService = {
-    searchCustomers: async (keyword) => {
-      return await httpRequest.get({
-        url: `/customers?keyword=${keyword}`,
-      });
-    },    
-  };
-  
+// Tạo mới Invoice
+export async function createInvoice({ data, signal }) {
+  return await httpRequest.post({
+    url: api.invoice.create(),
+    data,
+    signal,
+  });
+}
 
-  export const productService = {
-    searchProducts: async (keyword, categoryId) => {
-      return await httpRequest.get({
-        url: `/products?keyword=${keyword}&category=${categoryId}`,
-      });
-    },    
-  };
+// Xuất PDF Invoice
+export async function exportInvoicePDF({ id, signal }) {
+  return await httpRequest.get({
+    url: api.invoice.exportPDF(id),
+    signal,
+  });
+}

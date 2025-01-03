@@ -1,40 +1,40 @@
 import { api } from "../constants/api.js";
 import { httpRequest } from "./index.js";
 
-// Lấy danh sách đơn hàng
-const getPurchaseOrder = async ({ signal, page, itemsPerPage }) => {
-  return await httpRequest.get({
-    url: api.purchaseOrder.getAll({ page, itemsPerPage }),
+// Tải toàn bộ danh sách Purchase Orders
+export async function fetchAllPurchaseOrders({ signal }) {
+  const response = await httpRequest.get({
+    url: api.purchaseOrder.getAll({ page: 1, itemsPerPage: 100000, keyword: "" }), // Tải tối đa dữ liệu
     signal,
   });
-};
 
-// Tạo mới đơn hàng
-const createPurchaseOrder = async (orderData) => {
+  return response;
+}
+
+// Tìm kiếm trong danh sách Purchase Orders
+export function searchPurchaseOrders(data, keyword) {
+  const processedKeyword = keyword.trim().toLowerCase();
+
+  return data.filter(order => {
+    return order.provider.name.toLowerCase().includes(processedKeyword) || 
+           new Date(order.orderDate).toLocaleDateString().includes(processedKeyword);
+  });
+}
+
+// Tạo mới Purchase Order
+export async function createPurchaseOrder({ data, signal }) {
   return await httpRequest.post({
-    url: api.purchaseOrder.create,  // Giả sử đây là API endpoint tạo đơn hàng
-    data: orderData,
+    url: api.purchaseOrder.create(),
+    data,
+    signal,
   });
-};
+}
 
-// Cập nhật đơn hàng
-const updatePurchaseOrder = async (purchaseId, updatedData) => {
+// Cập nhật Purchase Order
+export async function updatePurchaseOrder({ id, data, signal }) {
   return await httpRequest.put({
-    url: api.purchaseOrder.update(purchaseId),  // Giả sử đây là API endpoint cập nhật đơn hàng
-    data: updatedData,
+    url: api.purchaseOrder.update({ id }),
+    data,
+    signal,
   });
-};
-
-// Xóa đơn hàng
-const deletePurchaseOrder = async (purchaseId) => {
-  return await httpRequest.delete({
-    url: api.purchaseOrder.delete(purchaseId),  // Giả sử đây là API endpoint xóa đơn hàng
-  });
-};
-
-export const purchaseServices = {
-  getPurchaseOrder,
-  createPurchaseOrder,
-  updatePurchaseOrder,
-  deletePurchaseOrder,
-};
+}

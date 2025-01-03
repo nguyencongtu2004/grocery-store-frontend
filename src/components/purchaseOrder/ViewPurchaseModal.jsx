@@ -1,117 +1,182 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Accordion, AccordionItem } from "@nextui-org/react";
-import { Image as ImageIcon } from "lucide-react";
+import {
+  Modal,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  Button,
+  Card,
+  CardBody,
+  Tooltip,
+} from "@nextui-org/react";
+import { Calendar, Package, DollarSign, AlertCircle } from "lucide-react";
 import PropTypes from "prop-types";
 
 export default function ViewPurchaseModal({ isOpen, onClose, purchaseOrder }) {
+  if (!purchaseOrder) return null;
+
   const formatDate = (dateString) => {
-    return dateString ? new Date(dateString).toLocaleDateString('vi-VN') : "N/A";
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   const formatCurrency = (amount) => {
-    return amount
-      ? new Intl.NumberFormat('vi-VN', {
-          style: 'currency',
-          currency: 'VND',
-        }).format(amount)
-      : "N/A";
+    if (!amount && amount !== 0) return "-";
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD'
+    }).format(amount);
+  };
+
+  const calculateTotalAmount = (detail) => {
+    return (detail.importPrice || 0) * (detail.quantity || 0);
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" placement="center">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
+      placement="center"
+      scrollBehavior="inside"
+      classNames={{
+        body: "p-5",
+        backdrop: "bg-[#292f46]/50 backdrop-opacity-40",
+        base: "border-[#292f46] bg-white dark:bg-[#19172c] rounded-lg",
+        closeButton: "hover:bg-white/5 active:bg-white/10"
+      }}
+    >
       <ModalContent>
         <ModalHeader className="flex flex-col gap-1">
           <h2 className="text-xl font-bold">Purchase Order Details</h2>
         </ModalHeader>
-
         <ModalBody>
-          {purchaseOrder ? (
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-500">Provider</p>
-                  <p className="font-medium">{purchaseOrder.provider || "N/A"}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm text-gray-500">Order Date</p>
-                  <p className="font-medium">{formatDate(purchaseOrder.orderDate)}</p>
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                {(purchaseOrder.products || []).map((product, index) => (
-                  <div key={index} className="border rounded-lg p-4">
-                    <Accordion>
-                      <AccordionItem
-                        title={
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium">Product {index + 1}</span>
-                            <span className="text-sm text-gray-500">{product.productName || "N/A"}</span>
-                          </div>
-                        }
-                      >
-                        <div className="space-y-4 pt-2">
-                          {/* Product Images */}
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            {Array.from({ length: 4 }).map((_, imgIndex) => (
-                              <div
-                                key={`image-${imgIndex}`}
-                                className="border rounded-md p-4 flex items-center justify-center"
-                              >
-                                {product.images?.[imgIndex] ? (
-                                  <img
-                                    src={product.images[imgIndex]}
-                                    alt={`Image ${imgIndex + 1}`}
-                                    className="w-20 h-20 object-cover rounded"
-                                  />
-                                ) : (
-                                  <div className="flex flex-col items-center gap-2">
-                                    <ImageIcon className="w-8 h-8 text-gray-400" />
-                                    <span className="text-sm text-gray-500">Image {imgIndex + 1}</span>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-
-                          {/* Product Details */}
-                          <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-1">
-                              <p className="text-sm text-gray-500">Product Name</p>
-                              <p className="font-medium">{product.productName || "N/A"}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-sm text-gray-500">Category</p>
-                              <p className="font-medium">{product.category || "N/A"}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-sm text-gray-500">Import Price</p>
-                              <p className="font-medium">{formatCurrency(product.importPrice)}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-sm text-gray-500">Stock Quantity</p>
-                              <p className="font-medium">{product.stockQuantity || "N/A"}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-sm text-gray-500">Selling Price</p>
-                              <p className="font-medium">{formatCurrency(product.sellingPrice)}</p>
-                            </div>
-                            <div className="space-y-1">
-                              <p className="text-sm text-gray-500">Expiration Date</p>
-                              <p className="font-medium">{formatDate(product.expireDate)}</p>
-                            </div>
-                          </div>
-                        </div>
-                      </AccordionItem>
-                    </Accordion>
+          <div className="space-y-6">
+            {/* Supplier Information Card */}
+            <Card className="bg-gradient-to-r from-blue-50 to-blue-100">
+              <CardBody className="p-4">
+                <div className="flex flex-col md:flex-row justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <Package className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Supplier</p>
+                      <p className="font-medium text-lg">
+                        {purchaseOrder.provider?.name || "N/A"}
+                      </p>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <p className="text-center text-gray-500">No purchase order details available.</p>
-          )}
-        </ModalBody>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-blue-600" />
+                    <div>
+                      <p className="text-sm text-gray-600">Order Date</p>
+                      <p className="font-medium">
+                        {formatDate(purchaseOrder.orderDate)}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardBody>
+            </Card>
 
+            {/* Products List */}
+            <div className="space-y-4">
+              <h3 className="text-lg font-medium flex items-center gap-2">
+                <Package className="w-5 h-5" />
+                Product List
+              </h3>
+              
+              {purchaseOrder.purchaseDetail?.map((detail, index) => (
+                <Card key={detail._id || index} className="w-full">
+                  <CardBody className="p-4">
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <h4 className="text-md font-medium">Product {index + 1}</h4>
+                        {detail.expireDate && (
+                          <Tooltip 
+                            content="Expiration Date"
+                            color="warning"
+                          >
+                            <div className="flex items-center gap-1 text-sm text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
+                              <AlertCircle className="w-4 h-4" />
+                              {formatDate(detail.expireDate)}
+                            </div>
+                          </Tooltip>
+                        )}
+                      </div>
+
+                      {/* Product Images Grid */}
+                      {detail.images && detail.images.length > 0 && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          {detail.images.map((image, imageIndex) => (
+                            <div
+                              key={`image-${imageIndex}`}
+                              className="relative aspect-square group overflow-hidden rounded-lg"
+                            >
+                              <img
+                                src={image}
+                                alt={`{detail.name || 'Product'} - Image {imageIndex + 1}`}
+                                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                onError={(e) => {
+                                  e.target.src = "/api/placeholder/400/400";
+                                  e.target.onerror = null;
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Product Details Grid */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div>
+                          <p className="text-sm text-gray-600">Product Name</p>
+                          <p className="font-medium">{detail.name || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Category</p>
+                          <p className="font-medium">{detail.category?.name || "N/A"}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Import Price</p>
+                          <p className="font-medium">{(detail.importPrice)}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Quantity</p>
+                          <p className="font-medium">{detail.quantity || 0} units</p>
+                        </div>
+                        <div className="lg:col-span-2">
+                          <p className="text-sm text-gray-600">Total Amount</p>
+                          <p className="font-medium text-blue-600">
+                            {(calculateTotalAmount(detail))}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </CardBody>
+                </Card>
+              ))}
+            </div>
+
+            {/* Grand Total Section */}
+            <Card className="bg-blue-500 text-white">
+              <CardBody className="p-4">
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <DollarSign className="w-4 h-4" />
+                    <span className="text-lg">Grand Total</span>
+                  </div>
+                  <span className="text-1xl font-bold">
+                    {(purchaseOrder.totalPrice)}
+                  </span>
+                </div>
+              </CardBody>
+            </Card>
+          </div>
+        </ModalBody>
         <ModalFooter>
           <Button color="primary" variant="light" onPress={onClose}>
             Close
@@ -126,16 +191,21 @@ ViewPurchaseModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
   purchaseOrder: PropTypes.shape({
-    provider: PropTypes.string,
+    provider: PropTypes.shape({
+      name: PropTypes.string,
+    }),
     orderDate: PropTypes.string,
-    products: PropTypes.arrayOf(
+    totalPrice: PropTypes.number,
+    purchaseDetail: PropTypes.arrayOf(
       PropTypes.shape({
+        _id: PropTypes.string,
+        name: PropTypes.string,
         images: PropTypes.arrayOf(PropTypes.string),
-        productName: PropTypes.string,
-        category: PropTypes.string,
+        category: PropTypes.shape({
+          name: PropTypes.string,
+        }),
         importPrice: PropTypes.number,
-        stockQuantity: PropTypes.number,
-        sellingPrice: PropTypes.number,
+        quantity: PropTypes.number,
         expireDate: PropTypes.string,
       })
     ),

@@ -3,7 +3,7 @@ import { ActionCell, DataTable } from "../components/DataTable";
 import PageTitle from "../components/PageTitle";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { purchaseServices } from "../requests/purchaseOrder";
+import { fetchAllPurchaseOrders } from "../requests/purchaseOrder";
 import AddPurchaseModal from "../components/purchaseOrder/AddPurchaseModal";
 import ViewPurchaseModal from "../components/purchaseOrder/ViewPurchaseModal";
 import EditPurchaseModal from "../components/purchaseOrder/EditPurchaseModal";
@@ -17,12 +17,19 @@ export default function PurchaseOrderPage() {
   const [selectedPurchase, setSelectedPurchase] = useState(null);
 
   const itemsPerPage = 10;
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ["purchase-orders", page, itemsPerPage],
-    queryFn: ({ signal }) => purchaseServices.getPurchaseOrder({ signal, page, itemsPerPage }),
+    queryFn: ({ signal }) => fetchAllPurchaseOrders({ signal, page, itemsPerPage }),
+    onSuccess: (data) => {
+      setTotalPages(data?.totalPages || 1); // Dynamically set totalPages
+    },
+    onError: (error) => {
+      toast.error("Failed to fetch purchase orders");
+    },
   });
 
   const purchaseOrder = data?.data || [];
+  console.log(purchaseOrder);
 
   const converDate = (date) => {
     const newDate = new Date(date);
@@ -47,33 +54,54 @@ export default function PurchaseOrderPage() {
   const columns = [
     {
       key: "_id",
-      label: "STT",
-      render: (_, index) => (page - 1) * itemsPerPage + index + 1,
+      label: "INDEX",
+      render: (product) => (page - 1) * itemsPerPage + (purchaseOrder.indexOf(product) + 1),
       align: "center"
     },
     {
-      key: "images",
-      label: "IMAGES",
-      render: (product) => product?.purchaseDetail?.images ? (
-        <span className="text-blue-500 hover:underline cursor-pointer">
-          {product.images}
-        </span>
-      ) : "-",
+      key: "productImage",
+      label: "PRODUCT IMAGE",
+      render: (product) => (
+        product?.productDetail?.map((detail, index) => (
+          <img
+            key={index}
+            src={detail?.images?.[0] || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"}
+            alt="Product"
+            className="w-10 h-10 object-cover rounded shadow-sm"
+          />
+        ))
+      ),
+      align: "center",
     },
     {
-      key: "name",
-      label: "NAME",
-      render: (product) => product?.name || "-",
+      key: "productName",
+      label: "PRODUCT NAME",
+      render: (product) => (
+        <div className="flex flex-col">
+          {product?.purchaseDetail?.map((detail, index) => (
+            <p key={index} className="text-sm text-gray-700">
+              {detail?.name || "Unnamed Product"}
+            </p>
+          ))}
+        </div>
+      ),
+      align: "left",
     },
     {
-      key: "sellingPrice",
-      label: "SELLINGPRICE",
-      render: (product) => product?.purchaseDetail?.id || "-",
+      key: "importPrice",
+      label: "IMPORTPRICE",
+      render: (product) => (
+        product?.purchaseDetail?.map((detail, idx) => (
+          <p key={idx}>{(detail?.importPrice || 0).toLocaleString()}</p>
+        )) || <p>N/A</p>
+      ),
+      align: "center",
     },
     {
       key: "totalPrice",
       label: "TOTALPRICE",
       render: (product) => product?.totalPrice || "-",
+      align: "center",
     },
     {
       key: "orderDate",
@@ -132,9 +160,16 @@ export default function PurchaseOrderPage() {
           }
         />
         
-        < AddPurchaseModal
+        <AddPurchaseModal
           isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
+          
+          onClose={() =>
+            setIsAddModalOpen(false)}
+
+          onSuccess={() => {
+            setIsAddModalOpen(false);
+            refetch(); // Refresh data after adding a purchase
+          }}
         />
 
         <ViewPurchaseModal
@@ -150,14 +185,14 @@ export default function PurchaseOrderPage() {
           onUpdate={async (updatedData) => {
             try {
               await purchaseServices.updatePurchaseOrder(selectedPurchase._id, updatedData);
-              console.log("Purchase order updated successfully");
               setIsEditModalOpen(false);
+              refetch(); // Refresh data after updating a purchase
             } catch (error) {
-              console.error(error.message || "Failed to update purchase order");
+              toast.error("Failed to update purchase order");
             }
           }}
         />
-        
+
       </div>
     </>
   );

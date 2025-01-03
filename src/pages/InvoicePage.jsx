@@ -1,10 +1,10 @@
-import { Pagination } from "@nextui-org/react";
-import { Eye, Filter } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { Pagination, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Button } from "@nextui-org/react";
+import { Eye, Search, ArrowUpDown } from "lucide-react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import PageTitle from "../components/PageTitle";
 import { useQuery } from "@tanstack/react-query";
-import { invoiceService } from "../requests/invoice";
-import { useEffect, useState } from "react";
+import { fetchInvoices } from "../requests/invoice";
 import AddInvoiceModal from "../components/invoice/AddInvoiceModal";
 import InvoiceDetailModal from "../components/invoice/InvoiceDetailModal";
 
@@ -15,111 +15,176 @@ export default function InvoicePage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [filter, setFilter] = useState({ sortBy: "price", order: "asc" });
-  const [pendingFilter, setPendingFilter] = useState({ sortBy: "price", order: "asc" });
+  const [filters, setFilters] = useState({
+    sortBy: "totalPrice",
+    order: "asc"
+  });
   const itemsPerPage = 10;
 
+  // Fetch tất cả data một lần
   const { data, isLoading, isError } = useQuery({
-    queryKey: ["invoices", page, itemsPerPage, searchTerm, filter],
-    queryFn: ({ signal }) =>
-      invoiceService.getInvoices({ signal, page, itemsPerPage, searchTerm, filter }),
+    queryKey: ["invoices"],
+    queryFn: ({ signal }) => fetchInvoices({ signal }),
+    keepPreviousData: true,
   });
 
-  const invoices = data?.data?.data || [];
-  console.log(invoices);
-
-  useEffect(() => {
-    if (data?.data?.pagination) {
-      setTotalPages(data.data.pagination.totalPages);
-    }
+  // Xử lý và tính toán totalPrice cho mỗi invoice
+  const processedInvoices = useMemo(() => {
+    const rawInvoices = data?.data?.data || [];
+    return rawInvoices.map((invoice) => {
+      const totalPrice = invoice.invoiceDetails.reduce((sum, detail) => {
+        const price = detail?.product?.sellingPrice || 0;
+        const quantity = detail?.quantity || 0;
+        return sum + price * quantity;
+      }, 0);
+      return { 
+        ...invoice, 
+        totalPrice,
+        searchableId: invoice._id?.toString().toLowerCase() || ""
+      };
+    });
   }, [data]);
+
+  // Lọc và sắp xếp invoices
+  const filteredAndSortedInvoices = useMemo(() => {
+    let result = [...processedInvoices];
+    
+    // Áp dụng search theo id và tên khách hàng
+    if (searchTerm) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      result = result.filter(invoice => 
+        invoice.searchableId.includes(searchLower) || 
+        invoice.customer?.name?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Sắp xếp
+    result.sort((a, b) => {
+      let compareValueA, compareValueB;
+
+      switch (filters.sortBy) {
+        case "totalPrice":
+          compareValueA = a.totalPrice || 0;
+          compareValueB = b.totalPrice || 0;
+          break;
+        case "createdAt":
+          compareValueA = new Date(a.createdAt).getTime();
+          compareValueB = new Date(b.createdAt).getTime();
+          break;
+        default:
+          compareValueA = a[filters.sortBy];
+          compareValueB = b[filters.sortBy];
+      }
+
+      if (filters.order === "asc") {
+        return compareValueA - compareValueB;
+      } else {
+        return compareValueB - compareValueA;
+      }
+    });
+
+    return result;
+  }, [processedInvoices, searchTerm, filters]);
+
+  // Phân trang
+  const paginatedInvoices = useMemo(() => {
+    const startIndex = (page - 1) * itemsPerPage;
+    return filteredAndSortedInvoices.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredAndSortedInvoices, page]);
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+    setPage(1);
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setPage(1);
+  };
 
   const columns = [
     {
       key: "index",
-      label: "Index",
-      render: (_, __, index) => <p className="text-sm text-gray-600">{(page - 1) * itemsPerPage + index + 1}</p>,
+      label: "INDEX",
+      render: (index) => (page - 1) * itemsPerPage + (processedInvoices.indexOf(index) + 1),
       align: "center",
     },
     {
       key: "productImage",
-      label: "Product Image",
-      render: (invoice) => {
-        return invoice?.invoiceDetails?.map((detail, index) => (
+      label: "PRODUCT IMAGE",
+      render: (invoice) => (
+        invoice?.invoiceDetails?.map((detail, index) => (
           <img
             key={index}
             src={detail.product?.images?.[0] || "/placeholder-image.png"}
             alt="Product"
             className="w-10 h-10 object-cover rounded shadow-sm"
           />
-        ));
-      },
+        ))
+      ),
       align: "center",
     },
     {
       key: "productName",
-      label: "Product Name",
-      render: (invoice) => {
-        return invoice?.invoiceDetails?.map((detail) => detail.product?.name || "").join(", ");
-      },
+      label: "PRODUCT NAME",
+      render: (invoice) => (
+        <div className="flex flex-col">
+          {invoice?.invoiceDetails?.map((detail, index) => (
+            <p key={index} className="text-sm text-gray-700">
+              {detail.product?.name || "Unnamed Product"}
+            </p>
+          ))}
+        </div>
+      ),
       align: "left",
     },
     {
       key: "productPrice",
-      label: "Selling Price",
-      render: (invoice) => {
-        return (
-          invoice?.invoiceDetails?.map((detail, idx) => (
-            <p key={idx}>
-              {(detail?.product?.sellingPrice || 0).toLocaleString()} VND
-            </p>
-          )) || <p>N/A</p>
-        );
-      },
+      label: "SELLING PRICE",
+      render: (invoice) => (
+        invoice?.invoiceDetails?.map((detail, idx) => (
+          <p key={idx}>{(detail?.product?.sellingPrice || 0).toLocaleString()}</p>
+        )) || <p>N/A</p>
+      ),
       align: "right",
     },
     {
       key: "quantity",
-      label: "Quantity",
-      render: (invoice) => {
-        return (
-          invoice?.invoiceDetails?.map((detail, idx) => (
-            <p key={idx}>{detail?.quantity ?? 0}</p>
-          )) || <p>N/A</p>
-        );
-      },
+      label: "QUANTITY",
+      render: (invoice) => (
+        invoice?.invoiceDetails?.map((detail, idx) => (
+          <p key={idx}>{detail?.quantity ?? 0}</p>
+        )) || <p>N/A</p>
+      ),
       align: "center",
     },
     {
       key: "totalPrice",
-      label: "Total Price",
-      render: (invoice) => {
-        const totalPrice = invoice.totalPrice;
-        return <p className="font-semibold text-blue-600">{(totalPrice || 0).toLocaleString()}</p>;
-      },
+      label: "TOTAL PRICE",
+      render: (invoice) => (
+        <p className="font-semibold text-blue-600">{(invoice.totalPrice || 0).toLocaleString()} VND</p>
+      ),
       align: "center",
     },
     {
       key: "createdAt",
-      label: "Created At",
-      render: (invoice) => {
-        const date = new Date(invoice.createdAt);
-        return <p className="text-sm text-gray-600">{date.toLocaleString()}</p>;
-      },
+      label: "CREATE AT",
+      render: (invoice) => (
+        <p className="text-sm text-gray-600">{new Date(invoice.createdAt).toLocaleString()}</p>
+      ),
       align: "center",
     },
     {
       key: "customerName",
-      label: "Customer Name",
-      render: (invoice) => {
-        const customer = invoice.customer;
-        return <p className="text-sm text-gray-700">{customer ? customer.name : "Unknown"}</p>;
-      },
+      label: "CUSTOMER NAME",
+      render: (invoice) => (
+        <p className="text-sm text-gray-700">{invoice.customer?.name || "Unknown"}</p>
+      ),
       align: "center",
     },
     {
       key: "actions",
-      label: "Actions",
+      label: "ACTION  ",
       render: (invoice) => (
         <div className="flex justify-center">
           <Eye
@@ -136,88 +201,95 @@ export default function InvoicePage() {
     },
   ];
 
-  function handleAddInvoice() {
-    setIsAddModalOpen(true);
-  }
-
-  function handleApplyFilter() {
-    setFilter(pendingFilter);
-  }
-
   return (
-    <>
+    <div className="space-y-4">
       <PageTitle
         title="Invoice Management"
         description="List of invoices and information management."
         buttonTitle="Add New Invoice"
-        onButonClick={handleAddInvoice}
-        isLoading={false}
+        onButonClick  ={() => {
+          setIsAddModalOpen(true);
+          console.log("Button clicked");}}
+        isLoading={isLoading}
       />
-      <div className="p-6 bg-white rounded-lg shadow-sm">
-        <div className="mb-4">
+      
+      <div className="flex justify-between items-center gap-4 mb-6">
+        <div className="relative flex-1 max-w-2xl">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <input
             type="text"
-            placeholder="Search invoices..."
+            placeholder="Search by Invoice ID or Customer Name..."
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="border px-4 py-2 rounded w-full"
+            onChange={handleSearch}
+            className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-all duration-200"
           />
         </div>
-        <div className="flex items-center gap-4 mb-4">
-          <div className="flex items-center gap-2">
-            <select
-              value={pendingFilter.sortBy}
-              onChange={(e) => setPendingFilter({ ...pendingFilter, sortBy: e.target.value })}
-              className="border px-4 py-2 rounded">
-              <option value="price">Price</option>
-              <option value="createdAt">Created At</option>
-            </select>
-            <select
-              value={pendingFilter.order}
-              onChange={(e) => setPendingFilter({ ...pendingFilter, order: e.target.value })}
-              className="border px-4 py-2 rounded">
-              <option value="asc">Ascending</option>
-              <option value="desc">Descending</option>
-            </select>
-            <Filter
-              size={24}
-              className="cursor-pointer text-blue-500 hover:text-blue-700"
-              onClick={handleApplyFilter}
-            />
-          </div>
-        </div>
-        {isError && <p className="text-red-500">Failed to load invoices. Please try again.</p>}
-        <DataTable
-          data={invoices}
-          columns={columns}
-          isLoading={isLoading}
-          emptyContent="No invoices found."
-          bottomContent={
-            totalPages > 1 ? (
-              <div className="flex w-full justify-center mt-4">
-                <Pagination
-                  isCompact
-                  showControls
-                  showShadow
-                  color="primary"
-                  page={page}
-                  total={totalPages}
-                  onChange={(newPage) => setPage(newPage)}
-                />
-              </div>
-            ) : null
-          }
-        />
-        <AddInvoiceModal
-          isOpen={isAddModalOpen}
-          onClose={() => setIsAddModalOpen(false)}
-        />
-        <InvoiceDetailModal
-          isOpen={isDetailModalOpen}
-          onClose={() => setIsDetailModalOpen(false)}
-          invoice={selectedInvoice}
-        />
+
+        <Dropdown>
+          <DropdownTrigger>
+            <Button 
+              variant="flat" 
+              className="capitalize"
+              startIcon={<ArrowUpDown className="h-4 w-4" />}
+            >
+              {filters.sortBy === "totalPrice" 
+                ? (filters.order === "asc" ? "Price: Low to High" : "Price: High to Low")
+                : (filters.order === "asc" ? "Date: Oldest First" : "Date: Newest First")
+              }
+            </Button>
+          </DropdownTrigger>
+          <DropdownMenu 
+            aria-label="Sort options"
+            onAction={(key) => {
+              const [sortBy, order] = key.split("-");
+              handleFilterChange({ sortBy, order });
+            }}
+          >
+            <DropdownItem key="totalPrice-asc">Price: Low to High</DropdownItem>
+            <DropdownItem key="totalPrice-desc">Price: High to Low</DropdownItem>
+            <DropdownItem key="createdAt-asc">Date: Oldest First</DropdownItem>
+            <DropdownItem key="createdAt-desc">Date: Newest First</DropdownItem>
+          </DropdownMenu>
+        </Dropdown>
       </div>
-    </>
+
+      {isError && (
+        <div className="mb-4 p-4 bg-red-50 text-red-600 rounded">
+          Failed to load invoices. Please try again.
+        </div>
+      )}
+
+      <DataTable
+        data={paginatedInvoices}
+        columns={columns}
+        isLoading={isLoading}
+        emptyContent="No invoices found."
+        bottomContent={
+          totalPages > 1 ? (
+            <div className="flex w-full justify-center mt-4">
+              <Pagination
+                isCompact
+                showControls
+                showShadow
+                color="primary"
+                page={page}
+                total={totalPages}
+                onChange={setPage}
+              />
+            </div>
+          ) : null
+        }
+      />
+
+      <AddInvoiceModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+      />
+      <InvoiceDetailModal
+        isOpen={isDetailModalOpen}
+        onClose={() => setIsDetailModalOpen(false)}
+        invoice={selectedInvoice}
+      />
+    </div>
   );
 }

@@ -1,165 +1,101 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@nextui-org/react";
-import { Trash } from "lucide-react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from "@nextui-org/react";
 import PropTypes from "prop-types";
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { invoiceService, customerService, productService } from "../../requests/invoice";
 
-export default function AddInvoiceModal({ isOpen, onClose }) {
-  const [customer, setCustomer] = useState("");
-  const [productLines, setProductLines] = useState([{ product: "", quantity: 1 }]);
-  const [customerSuggestions, setCustomerSuggestions] = useState([]);
-  const [productSuggestions, setProductSuggestions] = useState([]);
-  const queryClient = useQueryClient();
-
-  const { mutate, isLoading } = useMutation({
-    mutationFn: invoiceService.createInvoice,
-    onSuccess: () => {
-      queryClient.invalidateQueries(["invoices"]);
-      onClose();
-    },
-    onError: (error) => {
-      console.error("Error creating invoice:", error);
-    },
-  });
-
-  const handleCustomerSearch = async (value) => {
-    setCustomer(value);
-    try {
-      const response = await customerService.searchCustomers({ keyword: value });
-      setCustomerSuggestions(response.data);
-    } catch (error) {
-      console.error("Error searching customers:", error);
-      setCustomerSuggestions([]);
-    }
-  };
-
-  const handleProductSearch = async (index, value) => {
-    try {
-      const response = await productService.searchProducts({ keyword: value });
-      const updatedSuggestions = [...productSuggestions];
-      updatedSuggestions[index] = response.data;
-      setProductSuggestions(updatedSuggestions);
-    } catch (error) {
-      console.error("Error searching products:", error);
-      const updatedSuggestions = [...productSuggestions];
-      updatedSuggestions[index] = [];
-      setProductSuggestions(updatedSuggestions);
-    }
-  };
-
-  const handleAddProductLine = () => {
-    setProductLines([...productLines, { product: "", quantity: 1 }]);
-  };
-
-  const handleDeleteProductLine = (index) => {
-    const updatedLines = productLines.filter((_, i) => i !== index);
-    setProductLines(updatedLines);
-  };
-
-  const handleSubmit = () => {
-    mutate({
-      customer,
-      invoiceDetails: productLines,
-    });
-  };
-
+export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
   return (
-    <Modal isOpen={isOpen} onOpenChange={onClose} placement="top-center">
+    <Modal isOpen={isOpen} onClose={onClose} size="lg" placement="center" scrollBehavior="inside">
       <ModalContent>
-        {(onCloseModal) => (
-          <>
-            <ModalHeader className="flex flex-col gap-1">Add New Invoice</ModalHeader>
-            <ModalBody>
-              <Input
-                label="Customer"
-                placeholder="Search customer by name or ID"
-                value={customer}
-                onChange={(e) => handleCustomerSearch(e.target.value)}
-                required
-              />
-              {customerSuggestions.length > 0 && (
-                <ul className="border border-gray-300 rounded p-2 max-h-32 overflow-y-auto">
-                  {customerSuggestions.map((suggestion) => (
-                    <li
-                      key={suggestion._id}
-                      className="p-2 hover:bg-gray-100 cursor-pointer"
-                      onClick={() => {
-                        setCustomer(suggestion._id);
-                        setCustomerSuggestions([]);
-                      }}
-                    >
-                      {suggestion.name} ({suggestion.email})
-                    </li>
-                  ))}
-                </ul>
-              )}
-              {productLines.map((line, index) => (
-                <div key={index} className="grid grid-cols-[1fr_1fr_auto] gap-4 items-center">
-                  <Input
-                    label="Product"
-                    placeholder="Search product by name or ID"
-                    value={line.product}
-                    onChange={(e) => handleProductSearch(index, e.target.value)}
-                    required
-                  />
-                  {productSuggestions[index] && productSuggestions[index].length > 0 && (
-                    <ul className="border border-gray-300 rounded p-2 max-h-32 overflow-y-auto">
-                      {productSuggestions[index].map((suggestion) => (
-                        <li
-                          key={suggestion._id}
-                          className="p-2 hover:bg-gray-100 cursor-pointer"
-                          onClick={() => {
-                            const updatedLines = [...productLines];
-                            updatedLines[index].product = suggestion._id;
-                            setProductLines(updatedLines);
-                          }}
-                        >
-                          {suggestion.name} ({suggestion.price} VND)
+        <ModalHeader>
+          <h2 className="text-xl font-bold text-gray-800">Invoice Details</h2>
+        </ModalHeader>
+        <ModalBody>
+          {invoice ? (
+            <div className="space-y-8">
+              {/* Customer Info */}
+              <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-700">Customer Information</h3>
+                <div className="mt-2 space-y-1">
+                  <p>
+                    <strong>Name:</strong> {invoice.customer?.name || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Email:</strong> {invoice.customer?.email || "N/A"}
+                  </p>
+                  <p>
+                    <strong>Phone:</strong> {invoice.customer?.phone || "N/A"}
+                  </p>
+                </div>
+              </div>
+
+              {/* Invoice Summary */}
+              <div className="bg-blue-50 rounded-lg p-4 shadow-sm">
+                <h3 className="text-lg font-semibold text-blue-700">Invoice Summary</h3>
+                <div className="mt-2 space-y-1">
+                  <p>
+                    <strong>Date:</strong> {new Date(invoice.createdAt).toLocaleString()}
+                  </p>
+                  <p>
+                    <strong>Total Price: </strong> 
+                    <span className="text-blue-600 font-medium">
+                      {(invoice.totalPrice || 0).toLocaleString()} 
+                    </span>
+                  </p>
+                </div>
+              </div>
+
+              {/* Product List */}
+              <div className="bg-white rounded-lg p-4 shadow-sm">
+                <h3 className="text-lg font-semibold text-gray-700">Products</h3>
+                <div className="mt-4 border-t border-gray-200">
+                  {invoice.invoiceDetails?.length > 0 ? (
+                    <ul className="divide-y divide-gray-200">
+                      {invoice.invoiceDetails.map((detail, index) => (
+                        <li key={index} className="py-3 flex justify-between items-center">
+                          <div className="flex items-center space-x-4">
+                            <img
+                              src={detail.product?.images?.[0] || "/placeholder-image.png"}
+                              alt="Product"
+                              className="w-16 h-16 object-cover rounded-lg shadow-sm"
+                            />
+                            <div>
+                              <p className="font-medium text-gray-800">{detail.product?.name || "N/A"}</p>
+                              <p className="text-sm text-gray-500">Quantity: {detail.quantity}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-semibold text-gray-700">
+                              {detail.product?.sellingPrice?.toLocaleString() || "0"} VND
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              Total:{" "}
+                              {(detail.quantity * (detail.product?.sellingPrice || 0)).toLocaleString()} VND
+                            </p>
+                          </div>
                         </li>
                       ))}
                     </ul>
+                  ) : (
+                    <p className="text-gray-500 mt-4">No products found.</p>
                   )}
-                  <Input
-                    label="Quantity"
-                    placeholder="1"
-                    type="number"
-                    value={line.quantity}
-                    onChange={(e) => {
-                      const updatedLines = [...productLines];
-                      updatedLines[index].quantity = Number(e.target.value);
-                      setProductLines(updatedLines);
-                    }}
-                    required
-                  />
-                  <Trash
-                    size={24}
-                    color="red"
-                    className="cursor-pointer"
-                    onClick={() => handleDeleteProductLine(index)}
-                  />
                 </div>
-              ))}
-              <Button color="default" onPress={handleAddProductLine}>
-                Add Product Line
-              </Button>
-            </ModalBody>
-            <ModalFooter>
-              <Button color="primary" onPress={handleSubmit} isLoading={isLoading}>
-                Add Invoice
-              </Button>
-              <Button color="danger" variant="light" onPress={onCloseModal}>
-                Close
-              </Button>
-            </ModalFooter>
-          </>
-        )}
+              </div>
+            </div>
+          ) : (
+            <p className="text-gray-500 text-center py-6">No details available</p>
+          )}
+        </ModalBody>
+        <ModalFooter>
+          <Button onClick={onClose} color="primary" auto>
+            Close
+          </Button>
+        </ModalFooter>
       </ModalContent>
     </Modal>
   );
 }
 
-AddInvoiceModal.propTypes = {
+InvoiceDetailModal.propTypes = {
   isOpen: PropTypes.bool.isRequired,
   onClose: PropTypes.func.isRequired,
+  invoice: PropTypes.object,
 };

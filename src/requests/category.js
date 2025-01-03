@@ -1,100 +1,44 @@
-import { api } from "../constants/api";
-import { httpRequest } from "./index";
+import { api } from "../constants/api.js";
+import { httpRequest } from "./index.js";
 
-export const categoryService = {
-  getAllCategories: async () => {
-    try {
-      const response = await httpRequest.get({
-        url: api.category.getAll(),
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error("Failed to fetch categories: " + error.message);
-    }
-  },
-};
-
-export const customerService = {
-  searchCustomers: async (keyword) => {
-    try {
-      const response = await httpRequest.get({
-        url: api.customer.search(keyword),
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error("Failed to search customers: " + error.message);
-    }
-  },
-};
-
-export const productService = {
-  searchProducts: async (keyword, categoryId) => {
-    try {
-      const response = await httpRequest.get({
-        url: api.product.search(keyword, categoryId),
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error("Failed to search products: " + error.message);
-    }
-  },
-};
-
-export const invoiceService = {
-  createInvoice: async (data) => {
-    try {
-      const response = await httpRequest.post({
-        url: api.invoice.create(),
-        data,
-      });
-      return response.data;
-    } catch (error) {
-      throw new Error("Failed to create invoice: " + error.message);
-    }
-  },
-};
-
-// Below functions are for category management
-
+// Lấy danh sách danh mục
 export async function fetchCategories({ signal }) {
-  const response = await httpRequest.get({
-    url: api.category.getAll(),
-    signal,
-  });
-
-  return response;
+  try {
+    const response = await httpRequest.get({
+      url: api.category.getAll(),
+      signal,
+    });
+    console.log("Response from fetchCategories:", response);
+    return response;
+  } catch (error) {
+    console.error("Error in fetchCategories:", error);
+    throw error;
+  }
 }
 
-export async function createCategory({ name, description, signal }) {
-  const response = await httpRequest.post({
+
+// Tạo mới Category
+export async function createCategory({ name, signal }) {
+  return await httpRequest.post({
     url: api.category.createCategory(),
-    data: { name, description },
+    data: { name },
     signal,
   });
-  return response;
 }
 
-export async function updateCategory({ id, name, description, signal }) {
-  const response = await httpRequest.put({
+// Cập nhật Category
+export async function updateCategory({ id, name, signal }) {
+  return await httpRequest.put({
     url: api.category.updateCategory({ id }),
-    data: { name, description },
+    data: { name },
     signal,
   });
-  return response;
 }
 
+// Xóa Category
 export async function deleteCategory({ id, signal }) {
-  const response = await httpRequest.delete({
-    url: api.category.deleteCategory({ id }),
+  return await httpRequest.deleteCategory({
+    url: api.category.delete({ id }),
     signal,
   });
-  return response;
-}
-
-export async function fetchCategoryById({ id, signal }) {
-  const response = await httpRequest.get({
-    url: api.category.getCategory({ id }),
-    signal,
-  });
-  return response;
 }

@@ -37,17 +37,21 @@ export const api = {
     getOneById: ({ id }) => `/customers/${id}`,
     delete: ({ id }) => `/customers/${id}`
   },
-  invoice: {
-    getAll: ({ page, itemsPerPage }) => `/invoices?page=${page}&limit=${itemsPerPage}`,
-    getOneById: ({ id }) => `/invoices/${id}`,
-  },
   product: {
-    getAll: ({ page, itemsPerPage, keyword }) => `/products?page=${page}&limit=${itemsPerPage}&name=${keyword ?? ""}`,
-    getProduct: ({ id }) => `/products/${id}`,
+    getAll: ({ page, itemsPerPage, keyword }) => `/products?page=${page}&limit=${itemsPerPage}&keyword=${keyword ?? ""}`,
+    getDetail: ({ id }) => `/products/${id}`,
+    updateById: (id) => `/products/${id}`,
+  },
+  invoice: {
+    getAll: ({ page, itemsPerPage, searchTerm, sortBy, order }) => 
+      `/invoices?page=${page}&limit=${itemsPerPage}&search=${searchTerm ?? ""}&sortBy=${sortBy ?? ""}&order=${order ?? ""}`,
+    create: () => "/invoices",
+    exportPDF: ({ id }) => `/invoices/${id}/export`,
   },
   purchaseOrder: {
-    getAll: ({ page, itemsPerPage }) => `/purchase-orders?page=${page}&limit=${itemsPerPage}`,
-    getDetail: ({ id }) => `/purchase-orders/${id}`
+    getAll: ({ page, itemsPerPage, keyword }) => `/purchase-orders?page=${page}&limit=${itemsPerPage}&keyword=${keyword ?? ""}`,
+    create: () => "/purchase-orders",
+    update: ({ id }) => `/purchase-orders/${id}`,
   },
   provider: {
     getAll: () => `/providers`,

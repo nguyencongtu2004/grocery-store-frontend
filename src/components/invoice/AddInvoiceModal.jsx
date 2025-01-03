@@ -1,192 +1,322 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input } from "@nextui-org/react";
-import { Trash } from "lucide-react";
-import PropTypes from "prop-types";
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
-import { invoiceService, customerService, productService } from "../../requests/invoice";
-import { categoryService } from "../../requests/category";
+import React, { useState, useEffect } from 'react';
+import { 
+  Modal, 
+  ModalContent, 
+  ModalHeader, 
+  ModalBody, 
+  ModalFooter,
+  Button,
+  Input,
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem
+} from "@nextui-org/react";
+import { Trash, ChevronDown } from "lucide-react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { createInvoice } from "../../requests/invoice";
+import { fetchCustomers } from "../../requests/customer";
+import { fetchAllProducts } from "../../requests/product";
+import { fetchCategories } from "../../requests/category";
 
 export default function AddInvoiceModal({ isOpen, onClose }) {
-  const [productLines, setProductLines] = useState([{ category: "", product: "", quantity: 1 }]);
-  const [customerSuggestions, setCustomerSuggestions] = useState([]);
-  const [productSuggestions, setProductSuggestions] = useState([[]]);
-  const [categorySuggestions, setCategorySuggestions] = useState([]);
+  const [productLines, setProductLines] = useState([{ 
+    category: "", 
+    categoryId: "",
+    product: "", 
+    productId: "",
+    quantity: 1 
+  }]);
+  
+  const [customers, setCustomers] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [productsByCategory, setProductsByCategory] = useState({});
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const queryClient = useQueryClient();
 
-  const { mutate, isLoading } = useMutation({
-    mutationFn: invoiceService.createInvoice,
-    onSuccess: () => {
-      alert("Invoice created successfully!");
-      onClose();
-    },
-    onError: (error) => {
-      console.error("Error creating invoice:", error);
-      alert("Failed to create invoice. Please try again.");
-    },
-  });
-
-  const fetchCustomerSuggestions = async (value) => {
-    try {
-      const response = await customerService.searchCustomers(value);
-      setCustomerSuggestions(response.data || []);
-    } catch (error) {
-      console.error("Error fetching customer suggestions:", error);
-      setCustomerSuggestions([]);
+  const extractArrayData = (response, path) => {
+    if (!response) return [];
+    if (Array.isArray(response)) return response;
+    
+    const pathParts = path.split('.');
+    let data = response;
+    
+    for (const part of pathParts) {
+      data = data?.[part];
+      if (Array.isArray(data)) return data;
+      if (!data) return [];
     }
-  };  
-
-  const fetchCategorySuggestions = async () => {
-    try {
-      const response = await categoryService.getAllCategories();
-      setCategorySuggestions(response.data || []);
-    } catch (error) {
-      console.error("Error fetching category suggestions:", error);
-      setCategorySuggestions([]);
-    }
+    
+    return [];
   };
 
-  const fetchProductSuggestions = async (index, categoryId, value) => {
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      if (!isOpen) return;
+
+      try {
+        const [customersRes, categoriesRes] = await Promise.all([
+          fetchCustomers({ page: 1, itemsPerPage: 100 }),
+          fetchCategories({}),
+        ]);
+
+        const customersList = extractArrayData(customersRes, 'data');
+        const categoriesList = extractArrayData(categoriesRes?.data, 'categories');
+
+        setCustomers(customersList);
+        setCategories(categoriesList);
+        
+        setProductLines([{ 
+          category: "", 
+          categoryId: "",
+          product: "", 
+          productId: "",
+          quantity: 1 
+        }]);
+        setSelectedCustomer(null);
+        setProductsByCategory({});
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+      }
+    };
+
+    fetchInitialData();
+  }, [isOpen]);
+
+  const fetchProductsByCategory = async (categoryId) => {
     if (!categoryId) return;
+
     try {
-      const response = await productService.searchProducts(value, categoryId);
-      const updatedSuggestions = [...productSuggestions];
-      updatedSuggestions[index] = Array.isArray(response.data) ? response.data : [];
-      setProductSuggestions(updatedSuggestions);
+      const response = await fetchAllProducts({ categoryId });
+      const productsList = extractArrayData(response, 'data.data') || 
+                          extractArrayData(response, 'data') || 
+                          [];
+      
+      setProductsByCategory(prev => ({
+        ...prev,
+        [categoryId]: productsList
+      }));
     } catch (error) {
-      console.error("Error fetching product suggestions:", error);
-      const updatedSuggestions = [...productSuggestions];
-      updatedSuggestions[index] = [];
-      setProductSuggestions(updatedSuggestions);
+      console.error("Error fetching products:", error);
+      setProductsByCategory(prev => ({
+        ...prev,
+        [categoryId]: []
+      }));
     }
   };
 
   const addProductLine = () => {
-    setProductLines([...productLines, { category: "", product: "", quantity: 1 }]);
-    setProductSuggestions([...productSuggestions, []]);
+    setProductLines([
+      ...productLines,
+      { category: "", categoryId: "", product: "", productId: "", quantity: 1 }
+    ]);
   };
 
   const deleteProductLine = (index) => {
-    const updatedLines = productLines.filter((_, i) => i !== index);
-    const updatedSuggestions = productSuggestions.filter((_, i) => i !== index);
-    setProductLines(updatedLines);
-    setProductSuggestions(updatedSuggestions);
-  };
-
-  const handleInputChange = (index, field, value) => {
-    const updatedLines = [...productLines];
-    updatedLines[index][field] = value;
-    setProductLines(updatedLines);
-  };
-
-  const validateInvoiceData = (data) => {
-    if (!data.customer) return false;
-    for (const detail of data.invoiceDetails) {
-      if (!detail.category || !detail.product || detail.quantity <= 0) return false;
+    if (productLines.length > 1) {
+      setProductLines(productLines.filter((_, i) => i !== index));
     }
-    return true;
   };
+
+  const handleCategorySelect = async (index, categoryId) => {
+    const category = categories.find(c => c._id === categoryId);
+    if (!category) return;
+
+    const updatedLines = [...productLines];
+    updatedLines[index].category = category.name;
+    updatedLines[index].categoryId = category._id;
+    updatedLines[index].product = "";
+    updatedLines[index].productId = "";
+    setProductLines(updatedLines);
+    
+    if (!productsByCategory[categoryId]) {
+      await fetchProductsByCategory(categoryId);
+    }
+  };
+
+  const handleProductSelect = (index, productId) => {
+    const currentLine = productLines[index];
+    const productsForCategory = productsByCategory[currentLine.categoryId] || [];
+    const product = productsForCategory.find(p => p._id === productId);
+    
+    if (!product) return;
+
+    const updatedLines = [...productLines];
+    updatedLines[index].product = product.name;
+    updatedLines[index].productId = product._id;
+    setProductLines(updatedLines);
+  };
+
+  const { mutate: addInvoice, isLoading: isAdding } = useMutation({
+    mutationFn: createInvoice,
+    onSuccess: () => {
+      queryClient.invalidateQueries(["invoices"]);
+      onClose();
+      console.log("Invoice added successfully");
+    },
+    onError: (error) => {
+      console.error("Error adding invoice:", error.message);
+    },
+  });
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    const invoiceData = {
-      customer: e.target.customer.value,
+    
+    if (!selectedCustomer) {
+      alert("Please select a customer");
+      return;
+    }
+
+    const invalidLines = productLines.some(line => !line.productId || line.quantity < 1);
+    if (invalidLines) {
+      alert("Please fill in all product lines correctly");
+      return;
+    }
+
+    const requestData = {
+      customer: selectedCustomer._id,
       invoiceDetails: productLines.map((line) => ({
-        category: line.category,
-        product: line.product,
+        product: line.productId,
         quantity: parseInt(line.quantity, 10),
       })),
     };
 
-    if (!validateInvoiceData(invoiceData)) {
-      alert("Please fill out all required fields correctly.");
-      return;
-    }
+    console.log(requestData);
 
-    mutate(invoiceData);
+    addInvoice(requestData);
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="2xl" placement="center">
+    <Modal 
+      isOpen={isOpen} 
+      onClose={onClose} 
+      size="2xl"
+      scrollBehavior="inside"
+    >
       <ModalContent>
         <form onSubmit={handleSubmit}>
-          <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-bold">Add Invoice</h2>
-          </ModalHeader>
+          <ModalHeader>New Invoice</ModalHeader>
           <ModalBody>
-            <div className="grid gap-4">
-              <Input
-                autoFocus
-                name="customer"
-                label="Customer"
-                placeholder="Search customer by name"
-                variant="bordered"
-                onChange={(e) => fetchCustomerSuggestions(e.target.value)}
-                list="customer-suggestions"
-                required
-              />
-              <datalist id="customer-suggestions">
-                {customerSuggestions.map((suggestion) => (
-                  <option key={suggestion._id} value={suggestion.name} />
-                ))}
-              </datalist>
+            <div className="space-y-6">
+              <Dropdown>
+                <DropdownTrigger>
+                  <Button 
+                    variant="bordered" 
+                    className="w-full justify-between"
+                    endContent={<ChevronDown className="text-small" />}
+                  >
+                    {selectedCustomer ? selectedCustomer.name : "Select customer"}
+                  </Button>
+                </DropdownTrigger>
+                <DropdownMenu 
+                  aria-label="Customer selection"
+                  selectionMode="single"
+                  className="max-h-64 overflow-y-auto"
+                  selectedKeys={selectedCustomer ? [selectedCustomer._id] : []}
+                  onSelectionChange={(keys) => {
+                    const selectedId = Array.from(keys)[0];
+                    setSelectedCustomer(customers.find(c => c._id === selectedId));
+                  }}
+                >
+                  {customers.map((customer) => (
+                    <DropdownItem key={customer._id}>
+                      {customer.name}
+                    </DropdownItem>
+                  ))}
+                </DropdownMenu>
+              </Dropdown>
+
               {productLines.map((line, index) => (
-                <div key={index} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-center">
+                <div key={index} className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 items-start">
+                  <div className="space-y-4">
+                    <Dropdown>
+                      <DropdownTrigger>
+                        <Button 
+                          variant="bordered" 
+                          className="w-full justify-between"
+                          endContent={<ChevronDown className="text-small" />}
+                        >
+                          {line.category || "Select category"}
+                        </Button>
+                      </DropdownTrigger>
+                      <DropdownMenu 
+                        aria-label="Category selection"
+                        selectionMode="single"
+                        className="max-h-64 overflow-y-auto"
+                        selectedKeys={line.categoryId ? [line.categoryId] : []}
+                        onSelectionChange={(keys) => {
+                          const selectedId = Array.from(keys)[0];
+                          handleCategorySelect(index, selectedId);
+                        }}
+                      >
+                        {categories.map((category) => (
+                          <DropdownItem key={category._id}>
+                            {category.name}
+                          </DropdownItem>
+                        ))}
+                      </DropdownMenu>
+                    </Dropdown>
+
+                    <Dropdown isDisabled={!line.categoryId}>
+                      <DropdownTrigger>
+                        <Button 
+                          variant="bordered" 
+                          className="w-full justify-between"
+                          endContent={<ChevronDown className="text-small" />}
+                          disabled={!line.categoryId}
+                        >
+                          {line.product || "Select product"}
+                        </Button>
+                      </DropdownTrigger>
+                      <DropdownMenu 
+                        aria-label="Product selection"
+                        selectionMode="single"
+                        className="max-h-64 overflow-y-auto"
+                        selectedKeys={line.productId ? [line.productId] : []}
+                        onSelectionChange={(keys) => {
+                          const selectedId = Array.from(keys)[0];
+                          handleProductSelect(index, selectedId);
+                        }}
+                      >
+                        {(productsByCategory[line.categoryId] || []).map((product) => (
+                          <DropdownItem key={product._id}>
+                            {product.name}
+                          </DropdownItem>
+                        ))}
+                      </DropdownMenu>
+                    </Dropdown>
+                  </div>
+
                   <Input
-                    name={`category-${index}`}
-                    label="Category"
-                    placeholder="Select category"
-                    variant="bordered"
-                    value={line.category}
-                    onFocus={fetchCategorySuggestions}
-                    onChange={(e) => handleInputChange(index, "category", e.target.value)}
-                    list={`category-suggestions-${index}`}
-                    required
-                  />
-                  <datalist id={`category-suggestions-${index}`}>
-                    {categorySuggestions.map((category) => (
-                      <option key={category._id} value={category.name} />
-                    ))}
-                  </datalist>
-                  <Input
-                    name={`product-${index}`}
-                    label="Product"
-                    placeholder="Search product"
-                    variant="bordered"
-                    value={line.product}
-                    onChange={(e) => fetchProductSuggestions(index, line.category, e.target.value)}
-                    list={`product-suggestions-${index}`}
-                    required
-                  />
-                  <datalist id={`product-suggestions-${index}`}>
-                    {Array.isArray(productSuggestions[index]) &&
-                      productSuggestions[index].map((product) => (
-                        <option key={product._id} value={product.name} />
-                      ))}
-                  </datalist>
-                  <Input
-                    name={`quantity-${index}`}
-                    label="Quantity"
-                    placeholder="2"
-                    variant="bordered"
                     type="number"
+                    min="1"
                     value={line.quantity}
-                    onChange={(e) => handleInputChange(index, "quantity", e.target.value)}
-                    required
+                    onChange={(e) => {
+                      const updatedLines = [...productLines];
+                      updatedLines[index].quantity = e.target.value;
+                      setProductLines(updatedLines);
+                    }}
+                    placeholder="Quantity"
                   />
-                  <Trash
-                    size={24}
+
+                  <Button
+                    isIconOnly
+                    color="danger"
+                    variant="light"
                     onClick={() => deleteProductLine(index)}
-                    style={{ cursor: "pointer", color: "red" }}
-                  />
+                    disabled={productLines.length === 1}
+                  >
+                    <Trash size={20} />
+                  </Button>
                 </div>
               ))}
+
               <Button
-                className="mx-auto flex items-center justify-center gap-2 border border-dashed border-blue-400 py-1 rounded-md hover:bg-blue-50"
-                color="default"
-                variant="light"
+                variant="bordered"
                 onClick={addProductLine}
+                className="w-full"
               >
-                <span className="text-blue-500 font-bold text-sm">+</span>
-                <span className="text-blue-600 text-sm">Add Product</span>
+                Add Product Line
               </Button>
             </div>
           </ModalBody>
@@ -194,8 +324,8 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
             <Button color="danger" variant="light" onClick={onClose}>
               Cancel
             </Button>
-            <Button color="primary" type="submit" isLoading={isLoading}>
-              Add Invoice
+            <Button color="primary" type="submit" isLoading={isAdding}>
+              Create Invoice
             </Button>
           </ModalFooter>
         </form>
@@ -203,8 +333,3 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     </Modal>
   );
 }
-
-AddInvoiceModal.propTypes = {
-  isOpen: PropTypes.bool.isRequired,
-  onClose: PropTypes.func.isRequired,
-};
