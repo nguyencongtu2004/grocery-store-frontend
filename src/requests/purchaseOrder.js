@@ -16,25 +16,25 @@ export function searchPurchaseOrders(data, keyword) {
   const processedKeyword = keyword.trim().toLowerCase();
 
   return data.filter(order => {
-    return order.provider.name.toLowerCase().includes(processedKeyword) || 
-           new Date(order.orderDate).toLocaleDateString().includes(processedKeyword);
+    return order.provider.name.toLowerCase().includes(processedKeyword) ||
+      new Date(order.orderDate).toLocaleDateString().includes(processedKeyword);
   });
 }
 
 // Tạo mới Purchase Order
-export async function createPurchaseOrder({ data, signal }) {
+export async function createPurchaseOrder({ formData, signal }) {
   return await httpRequest.postWithFiles({
     url: api.purchaseOrder.create(),
-    data,
+    data: formData,
     signal,
   });
 }
 
 // Cập nhật Purchase Order
-export async function updatePurchaseOrder({ id, data, signal }) {
-  return await httpRequest.put({
+export async function updatePurchaseOrder({ id, formData, signal }) {
+  return await httpRequest.putWithFiles({
     url: api.purchaseOrder.update({ id }),
-    data,
+    data: formData,
     signal,
   });
 }

@@ -19,7 +19,8 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
     stockQuantity: "",
     sellingPrice: "",
     expireDate: "",
-    images: [],
+    images: [], // URLs for preview
+    imageFiles: [], // Actual files
     profit: 0,
     profitMargin: 0
   }]);
@@ -32,14 +33,14 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
       try {
         const [providersRes, categoriesRes] = await Promise.all([
           fetchProviders({}),
-          fetchCategories({})
+          fetchCategories({}),
         ]);
         setProviders(providersRes?.data || []);
         setCategories(categoriesRes?.data?.categories || []);
         resetForm();
       } catch (error) {
         console.error("Error fetching initial data:", error);
-        toast.error("Không thể tải dữ liệu ban đầu");
+        toast.error("Unable to load initial data");
       }
     };
     fetchInitialData();
@@ -55,7 +56,8 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
       stockQuantity: "",
       sellingPrice: "",
       expireDate: "",
-      images: [],
+      images: [], // URLs for preview
+      imageFiles: [], // Actual files
       profit: 0,
       profitMargin: 0
     }]);
@@ -71,22 +73,26 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
   }, []);
 
   const handleImageUpload = async (productIndex, e) => {
-    const file = e.target.files[0];
-    if (file) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    // Validate each file
+    for (const file of files) {
       if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        toast.error("Kích thước file không được vượt quá 5MB");
+        toast.error("File size cannot exceed 5MB");
         return;
       }
+    }
 
-      try {
-        const imageUrl = URL.createObjectURL(file);
-        const updatedLines = [...productLines];
-        updatedLines[productIndex].images = [imageUrl];
-        setProductLines(updatedLines);
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        toast.error("Không thể tải lên hình ảnh");
-      }
+    try {
+      const imageUrls = files.map(file => URL.createObjectURL(file));
+      const updatedLines = [...productLines];
+      updatedLines[productIndex].images = imageUrls;
+      updatedLines[productIndex].imageFiles = files;
+      setProductLines(updatedLines);
+    } catch (error) {
+      console.error("Error handling images:", error);
+      toast.error("Unable to process images");
     }
   };
 
@@ -110,7 +116,8 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
       stockQuantity: "",
       sellingPrice: "",
       expireDate: "",
-      images: [],
+      images: [], // URLs for preview
+      imageFiles: [], // Actual files
       profit: 0,
       profitMargin: 0
     }]);
@@ -128,7 +135,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
       });
       setErrors(newErrors);
     } else {
-      toast.error("Phải có ít nhất một sản phẩm");
+      toast.error("Must have at least one product");
     }
   };
 
@@ -155,43 +162,43 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
     let isValid = true;
 
     if (!selectedProvider) {
-      newErrors.provider = "Vui lòng chọn nhà cung cấp";
+      newErrors.provider = "Please select a provider";
       isValid = false;
     }
 
     productLines.forEach((line, index) => {
       if (!line.name) {
-        newErrors[`name-${index}`] = "Vui lòng nhập tên sản phẩm";
+        newErrors[`name-${index}`] = "Please enter product name";
         isValid = false;
       }
       if (!line.categoryId) {
-        newErrors[`category-${index}`] = "Vui lòng chọn danh mục";
+        newErrors[`category-${index}`] = "Please select a category";
         isValid = false;
       }
       if (!line.importPrice || Number(line.importPrice) <= 0) {
-        newErrors[`importPrice-${index}`] = "Giá nhập phải lớn hơn 0";
+        newErrors[`importPrice-${index}`] = "Import price must be greater than 0";
         isValid = false;
       }
       if (!line.stockQuantity || Number(line.stockQuantity) <= 0) {
-        newErrors[`stockQuantity-${index}`] = "Số lượng phải lớn hơn 0";
+        newErrors[`stockQuantity-${index}`] = "Quantity must be greater than 0";
         isValid = false;
       }
       if (!line.sellingPrice || Number(line.sellingPrice) <= 0) {
-        newErrors[`sellingPrice-${index}`] = "Giá bán phải lớn hơn 0";
+        newErrors[`sellingPrice-${index}`] = "Selling price must be greater than 0";
         isValid = false;
       }
       if (Number(line.sellingPrice) <= Number(line.importPrice)) {
-        newErrors[`sellingPrice-${index}`] = "Giá bán phải cao hơn giá nhập";
+        newErrors[`sellingPrice-${index}`] = "Selling price must be higher than import price";
         isValid = false;
       }
       if (!line.expireDate) {
-        newErrors[`expireDate-${index}`] = "Vui lòng chọn ngày hết hạn";
+        newErrors[`expireDate-${index}`] = "Please select an expire date";
         isValid = false;
       } else {
         const expireDate = new Date(line.expireDate);
         const today = new Date();
         if (expireDate <= today) {
-          newErrors[`expireDate-${index}`] = "Ngày hết hạn phải lớn hơn ngày hiện tại";
+          newErrors[`expireDate-${index}`] = "Expire date must be later than today";
           isValid = false;
         }
       }
@@ -205,50 +212,57 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
     e.preventDefault();
 
     if (!validateForm()) {
-      toast.error("Vui lòng kiểm tra lại thông tin nhập");
+      toast.error("Please check the input information");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const formData = new FormData(e.target);
-      const purchaseData = {
-        provider: selectedProvider._id,
-        orderDate: formData.get("orderDate"),
-        purchaseDetail: productLines.map((line) => ({
-          name: line.name.trim(),
-          sellingPrice: Number(line.sellingPrice),
-          stockQuantity: Number(line.stockQuantity),
-          category: {
-            _id: line.category._id,
-          },
-          images: line.images,
-          importPrice: Number(line.importPrice),
-          expireDate: line.expireDate,
-        })),
-      };
+      const formData = new FormData();
 
-      const response = await createPurchaseOrder({ data: purchaseData });
-      if (response.status == "success") {
-        toast.success("Tạo phiếu nhập hàng thành công");
-        onSuccess?.(); // Trigger success callback
-        onClose(); // Close the modal
+      // Thêm thông tin cơ bản của phiếu nhập
+      formData.append("provider", selectedProvider._id);
+      formData.append("orderDate", e.target.orderDate.value);
+      formData.append("totalPurchaseDetail", productLines.length || 0);
+
+      // Thêm chi tiết sản phẩm
+      productLines.forEach((line, index) => {
+        formData.append(`purchaseDetail[${index}][name]`, line.name.trim());
+        formData.append(`purchaseDetail[${index}][sellingPrice]`, line.sellingPrice);
+        formData.append(`purchaseDetail[${index}][stockQuantity]`, line.stockQuantity);
+        formData.append(`purchaseDetail[${index}][category][_id]`, line.category._id);
+        formData.append(`purchaseDetail[${index}][category][name]`, line.category.name);
+        formData.append(`purchaseDetail[${index}][importPrice]`, line.importPrice);
+        formData.append(`purchaseDetail[${index}][expireDate]`, line.expireDate);
+
+        // Thêm files ảnh nếu có
+        if (line.imageFiles && line.imageFiles.length > 0) {
+          line.imageFiles.forEach((file) => {
+            formData.append(`purchaseDetail[${index}][files]`, file);
+          });
+        }
+      });
+
+      const response = await createPurchaseOrder({ formData });
+      if (response.status === 201) {
+        toast.success("Purchase order created successfully");
+        onSuccess?.();
+        onClose();
       } else {
-        toast.error("Failed to create purchase order");
+        toast.error("Unable to create purchase order");
       }
     } catch (error) {
       console.error("Error creating purchase order:", error);
-      toast.error("Có lỗi xảy ra khi tạo phiếu nhập hàng");
+      toast.error("An error occurred while creating purchase order");
     } finally {
       setIsSubmitting(false);
     }
   };
 
-
   const calculateSuggestedPrice = (index) => {
     const line = productLines[index];
     if (!line.importPrice) {
-      toast.error("Vui lòng nhập giá nhập trước");
+      toast.error("Please enter import price first");
       return;
     }
 
@@ -267,13 +281,13 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
         body: "p-5",
         backdrop: "bg-[#292f46]/50 backdrop-opacity-40",
         base: "border-[#292f46] bg-white dark:bg-[#19172c] rounded-lg",
-        closeButton: "hover:bg-white/5 active:bg-white/10"
+        closeButton: "hover:bg-white/5 active:bg-white/10",
       }}
     >
       <ModalContent>
         <form onSubmit={handleSubmit}>
           <ModalHeader className="flex flex-col gap-1">
-            <h2 className="text-xl font-bold">Thêm phiếu nhập hàng</h2>
+            <h2 className="text-xl font-bold">Add Purchase Order</h2>
           </ModalHeader>
           <ModalBody>
             <div className="grid gap-4">
@@ -281,8 +295,8 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                 <Dropdown>
                   <DropdownTrigger>
                     <Input
-                      label="Nhà cung cấp"
-                      placeholder="Chọn nhà cung cấp"
+                      label="Provider"
+                      placeholder="Select provider"
                       variant="bordered"
                       value={selectedProvider?.name || ""}
                       readOnly
@@ -314,7 +328,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
 
               <Input
                 name="orderDate"
-                label="Ngày nhập hàng"
+                label="Order Date"
                 type="date"
                 variant="bordered"
                 required
@@ -327,9 +341,9 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                 >
                   <div className="flex justify-between items-center">
                     <h3 className="text-lg font-medium flex items-center gap-2">
-                      Sản phẩm {productIndex + 1}
+                      Product {productIndex + 1}
                       {line.profit > 0 && (
-                        <Tooltip content={`Lợi nhuận: ${line.profit.toLocaleString()}đ (${line.profitMargin.toFixed(1)}%)`}>
+                        <Tooltip content={`Profit: ${line.profit.toLocaleString()}đ (${line.profitMargin.toFixed(1)}%)`}>
                           <span className="text-sm text-green-600 bg-green-100 px-2 py-1 rounded-full">
                             +{line.profitMargin.toFixed(1)}%
                           </span>
@@ -337,7 +351,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                       )}
                     </h3>
                     {productIndex > 0 && (
-                      <Tooltip content="Xóa sản phẩm">
+                      <Tooltip content="Delete product">
                         <Button
                           isIconOnly
                           color="danger"
@@ -352,8 +366,8 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <Input
-                      label="Tên sản phẩm"
-                      placeholder="Nhập tên sản phẩm"
+                      label="Product Name"
+                      placeholder="Enter product name"
                       variant="bordered"
                       value={line.name}
                       onChange={(e) => handleInputChange(productIndex, "name", e.target.value)}
@@ -365,8 +379,8 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                     <Dropdown>
                       <DropdownTrigger>
                         <Input
-                          label="Danh mục"
-                          placeholder="Chọn danh mục"
+                          label="Category"
+                          placeholder="Select category"
                           variant="bordered"
                           value={categories.find(c => c._id === line.categoryId)?.name || ""}
                           readOnly
@@ -374,7 +388,8 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                           color={errors[`category-${productIndex}`] ? "danger" : "default"}
                           errorMessage={errors[`category-${productIndex}`]}
                         />
-                      </DropdownTrigger><DropdownMenu
+                      </DropdownTrigger>
+                      <DropdownMenu
                         aria-label="Category selection"
                         selectionMode="single"
                         className="max-h-64 overflow-y-auto"
@@ -394,9 +409,9 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
 
                     <div className="flex gap-2 items-end">
                       <Input
-                        label="Giá nhập"
+                        label="Import Price"
                         type="number"
-                        placeholder="Nhập giá nhập"
+                        placeholder="Enter import price"
                         variant="bordered"
                         value={line.importPrice}
                         onChange={(e) => handleInputChange(productIndex, "importPrice", e.target.value)}
@@ -412,9 +427,9 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                     </div>
 
                     <Input
-                      label="Số lượng"
+                      label="Quantity"
                       type="number"
-                      placeholder="Nhập số lượng"
+                      placeholder="Enter quantity"
                       variant="bordered"
                       value={line.stockQuantity}
                       onChange={(e) => handleInputChange(productIndex, "stockQuantity", e.target.value)}
@@ -425,9 +440,9 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
 
                     <div className="flex gap-2 items-end">
                       <Input
-                        label="Giá bán"
+                        label="Selling Price"
                         type="number"
-                        placeholder="Nhập giá bán"
+                        placeholder="Enter selling price"
                         variant="bordered"
                         value={line.sellingPrice}
                         onChange={(e) => handleInputChange(productIndex, "sellingPrice", e.target.value)}
@@ -440,7 +455,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                           </div>
                         }
                       />
-                      <Tooltip content="Tính giá bán đề xuất (Markup 30%)">
+                      <Tooltip content="Calculate suggested price (30% Markup)">
                         <Button
                           isIconOnly
                           variant="light"
@@ -452,7 +467,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                     </div>
 
                     <Input
-                      label="Ngày hết hạn"
+                      label="Expire Date"
                       type="date"
                       variant="bordered"
                       value={line.expireDate}
@@ -464,8 +479,8 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
 
                     <div className="col-span-2">
                       <label className="block text-sm font-medium mb-2">
-                        Hình ảnh sản phẩm
-                        <Tooltip content="Kích thước tối đa: 5MB">
+                        Product Images
+                        <Tooltip content="Maximum size: 5MB">
                           <HelpCircle className="inline ml-1" size={16} />
                         </Tooltip>
                       </label>
@@ -475,26 +490,31 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                         onChange={(e) => handleImageUpload(productIndex, e)}
                         className="hidden"
                         id={`image-${productIndex}`}
+                        multiple
                       />
                       <label
                         htmlFor={`image-${productIndex}`}
                         className="cursor-pointer flex items-center justify-center border-2 border-dashed rounded-lg p-4 hover:bg-gray-100 transition-colors duration-200"
                       >
-                        {line.images[0] ? (
-                          <div className="relative group">
-                            <img
-                              src={line.images[0]}
-                              alt="Product"
-                              className="w-32 h-32 object-cover rounded"
-                            />
-                            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
-                              <ImageIcon className="w-8 h-8 text-white" />
-                            </div>
+                        {line.images.length > 0 ? (
+                          <div className="grid grid-cols-2 gap-2">
+                            {line.images.map((image, index) => (
+                              <div key={index} className="relative group">
+                                <img
+                                  src={image}
+                                  alt={`Product ${index + 1}`}
+                                  className="w-16 h-16 object-cover rounded"
+                                />
+                                <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200 rounded">
+                                  <ImageIcon className="w-4 h-4 text-white" />
+                                </div>
+                              </div>
+                            ))}
                           </div>
                         ) : (
                           <div className="flex flex-col items-center">
                             <ImageIcon className="w-8 h-8 text-gray-400" />
-                            <span className="mt-2 text-sm text-gray-500">Chọn hình ảnh</span>
+                            <span className="mt-2 text-sm text-gray-500">Choose images</span>
                           </div>
                         )}
                       </label>
@@ -502,7 +522,6 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                   </div>
                 </div>
               ))}
-
               <Button
                 className="mx-auto flex items-center justify-center gap-2 border border-dashed border-blue-400 py-2 px-4 rounded-lg hover:bg-blue-50 transition-colors duration-200"
                 color="default"
@@ -510,16 +529,16 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                 onClick={addProductLine}
               >
                 <span className="text-blue-500 font-bold text-lg">+</span>
-                <span className="text-blue-600">Thêm sản phẩm</span>
+                <span className="text-blue-600">Add Product</span>
               </Button>
             </div>
           </ModalBody>
           <ModalFooter>
             <Button color="danger" variant="light" onPress={onClose}>
-              Hủy
+              Cancel
             </Button>
             <Button color="primary" type="submit" isLoading={isSubmitting}>
-              {isSubmitting ? "Đang xử lý..." : "Thêm phiếu nhập hàng"}
+              {isSubmitting ? "Processing..." : "Add Purchase Order"}
             </Button>
           </ModalFooter>
         </form>

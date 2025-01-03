@@ -25,7 +25,7 @@ export default function PurchaseOrderPage() {
       setTotalPages(data?.totalPages || 1); // Dynamically set totalPages
     },
     onError: (error) => {
-      toast.error("Failed to fetch purchase orders");
+      toast.error("Failed to fetch purchase orders", error);
     },
   });
 
@@ -141,9 +141,9 @@ export default function PurchaseOrderPage() {
   return (
     <>
       <PageTitle
-        title="PurchaseOrder"
-        description="Manage PurchaseOrder of your store"
-        buttonTitle="Add new purchaseOrder"
+        title="Purchase Order"
+        description="Manage purchase order of your store"
+        buttonTitle="Add new purchase order"
         onButonClick={handleAddPurchaseOrder}
         isLoading={false}
       />
@@ -169,7 +169,6 @@ export default function PurchaseOrderPage() {
             ) : null
           }
         />
-
         <AddPurchaseModal
           isOpen={isAddModalOpen}
           onClose={() =>
@@ -179,28 +178,20 @@ export default function PurchaseOrderPage() {
             refetch(); // Refresh data after adding a purchase
           }}
         />
-
         <ViewPurchaseModal
           isOpen={isViewModalOpen}
           onClose={() => setIsViewModalOpen(false)}
           purchaseOrder={selectedPurchase}
         />
-
         <EditPurchaseModal
           isOpen={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           purchaseOrder={selectedPurchase}
-          onUpdate={async (updatedData) => {
-            try {
-              await purchaseServices.updatePurchaseOrder(selectedPurchase._id, updatedData);
-              setIsEditModalOpen(false);
-              refetch(); // Refresh data after updating a purchase
-            } catch (error) {
-              toast.error("Failed to update purchase order");
-            }
+          onSuccess={() => {
+            setIsEditModalOpen(false);
+            refetch(); // Refresh data after editing a purchase
           }}
         />
-
       </div>
     </>
   );

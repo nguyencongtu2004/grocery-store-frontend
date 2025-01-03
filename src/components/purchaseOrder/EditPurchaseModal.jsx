@@ -1,5 +1,5 @@
 import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Tooltip } from "@nextui-org/react";
-import { Trash, Image as ImageIcon, ChevronDown, HelpCircle, Calculator } from "lucide-react";
+import { Trash, Image as ImageIcon, ChevronDown, Calculator } from "lucide-react";
 import PropTypes from "prop-types";
 import { useState, useEffect, useCallback } from "react";
 import { fetchProviders } from "../../requests/provider";
@@ -25,7 +25,7 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
         ]);
         setProviders(providersRes?.data || []);
         setCategories(categoriesRes?.data?.categories || []);
-        
+
         // Initialize form with purchase order data if available
         if (purchaseOrder) {
           setSelectedProvider(purchaseOrder.provider);
@@ -35,10 +35,12 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
             category: detail.category,
             categoryId: detail.category?._id,
             importPrice: detail.importPrice?.toString(),
-            stockQuantity: detail.quantity?.toString(),
+            stockQuantity: detail.stockQuantity?.toString(),
             sellingPrice: detail.sellingPrice?.toString(),
             expireDate: detail.expireDate?.split('T')[0],
-            images: detail.images || [],
+            images: detail.images || [], // Existing image URLs
+            imageFiles: [], // New image files to upload
+            deleteImages: [], // Image URLs to delete
             profit: detail.sellingPrice - detail.importPrice,
             profitMargin: ((detail.sellingPrice - detail.importPrice) / detail.importPrice * 100) || 0
           })));
@@ -60,22 +62,35 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
   }, []);
 
   const handleImageUpload = async (productIndex, e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+
+    // Validate each file
+    for (const file of files) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
         toast.error("File size cannot exceed 5MB");
         return;
       }
-      
-      try {
-        const imageUrl = URL.createObjectURL(file);
-        const updatedLines = [...productLines];
-        updatedLines[productIndex].images = [imageUrl];
-        setProductLines(updatedLines);
-      } catch (error) {
-        console.error("Error uploading image:", error);
-        toast.error("Failed to upload image");
+    }
+
+    try {
+      const imageUrls = files.map(file => URL.createObjectURL(file));
+      const updatedLines = [...productLines];
+      const currentLine = updatedLines[productIndex];
+
+      // Add existing images to deleteImages array
+      if (currentLine.images && currentLine.images.length > 0) {
+        currentLine.deleteImages = [...currentLine.images];
       }
+
+      // Update with new images
+      currentLine.images = imageUrls;
+      currentLine.imageFiles = files;
+
+      setProductLines(updatedLines);
+    } catch (error) {
+      console.error("Error handling images:", error);
+      toast.error("Failed to process images");
     }
   };
 
@@ -100,6 +115,8 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
       sellingPrice: "",
       expireDate: "",
       images: [],
+      imageFiles: [],
+      deleteImages: [],
       profit: 0,
       profitMargin: 0
     }]);
@@ -110,7 +127,7 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
       const newLines = [...productLines];
       newLines.splice(index, 1);
       setProductLines(newLines);
-      
+
       const newErrors = { ...errors };
       Object.keys(newErrors).forEach(key => {
         if (key.endsWith(`-${index}`)) {
@@ -193,7 +210,7 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       toast.error("Please check your input");
       return;
@@ -201,33 +218,51 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
 
     try {
       setIsSubmitting(true);
-      const formData = new FormData(e.target);
-      const updateData = {
-        id: purchaseOrder._id,
-        provider: selectedProvider._id,
-        orderDate: formData.get("orderDate"),
-        purchaseDetail: productLines.map(line => ({
-          id: line.id, // Include existing line ID if available
-          name: line.name.trim(),
-          sellingPrice: Number(line.sellingPrice),
-          quantity: Number(line.stockQuantity),
-          category: {
-            _id: line.category._id
-          },
-          images: line.images,
-          importPrice: Number(line.importPrice),
-          expireDate: line.expireDate
-        }))
-      };
+      const formData = new FormData();
 
-      const response = await updatePurchaseOrder(updateData);
+      // Thêm thông tin cơ bản của phiếu nhập
+      formData.append("id", purchaseOrder._id);
+      formData.append("provider", selectedProvider._id);
+      formData.append("orderDate", e.target.orderDate.value);
+      formData.append("totalPurchaseDetail", productLines.length || 0);
 
-      console.log(response);
+      // Thêm chi tiết sản phẩm
+      productLines.forEach((line, index) => {
+        if (line.id) {
+          formData.append(`purchaseDetail[${index}][id]`, line.id);
+        }
+        formData.append(`purchaseDetail[${index}][name]`, line.name.trim());
+        formData.append(`purchaseDetail[${index}][sellingPrice]`, line.sellingPrice);
+        formData.append(`purchaseDetail[${index}][stockQuantity]`, line.stockQuantity);
+        formData.append(`purchaseDetail[${index}][category][_id]`, line.category._id);
+        formData.append(`purchaseDetail[${index}][category][name]`, line.category.name);
+        formData.append(`purchaseDetail[${index}][importPrice]`, line.importPrice);
+        formData.append(`purchaseDetail[${index}][expireDate]`, line.expireDate);
 
-      if (response.status == "success") {
+        // Thêm danh sách ảnh cần xóa nếu có
+        if (line.deleteImages && line.deleteImages.length > 0) {
+          line.deleteImages.forEach((imageUrl) => {
+            formData.append(`purchaseDetail[${index}][deleteImages]`, imageUrl);
+          });
+        }
+        formData.append(`purchaseDetail[0][deleteImages]`, 'http://link1.com');
+        formData.append(`purchaseDetail[0][deleteImages]`, 'http://link2.com');
+
+        // Thêm files ảnh mới nếu có
+        if (line.imageFiles && line.imageFiles.length > 0) {
+          line.imageFiles.forEach((file) => {
+            formData.append(`purchaseDetail[${index}][files]`, file);
+          });
+        }
+      });
+
+      const response = await updatePurchaseOrder({ id: purchaseOrder._id, formData });
+      if (response.status === 201) {
         toast.success("Purchase order updated successfully");
         onSuccess?.();
         onClose();
+      } else {
+        toast.error("Failed to update purchase order");
       }
     } catch (error) {
       console.error("Error updating purchase order:", error);
@@ -250,10 +285,10 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={onClose} 
-      size="2xl" 
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      size="2xl"
       placement="center"
       classNames={{
         body: "p-5",
@@ -314,8 +349,8 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
               />
 
               {productLines.map((line, productIndex) => (
-                <div 
-                  key={line.id || productIndex} 
+                <div
+                  key={line.id || productIndex}
                   className="border rounded-lg p-4 space-y-4 bg-gray-50 hover:bg-gray-100 transition-colors duration-200"
                 >
                   <div className="flex justify-between items-center">
@@ -514,7 +549,7 @@ EditPurchaseModal.propTypes = {
         name: PropTypes.string.isRequired,
         category: PropTypes.object.isRequired,
         importPrice: PropTypes.number.isRequired,
-        quantity: PropTypes.number.isRequired,
+        stockQuantity: PropTypes.number.isRequired,
         sellingPrice: PropTypes.number.isRequired,
         expireDate: PropTypes.string.isRequired,
         images: PropTypes.arrayOf(PropTypes.string)
