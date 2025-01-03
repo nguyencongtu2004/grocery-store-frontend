@@ -245,8 +245,10 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
             formData.append(`purchaseDetail[${index}][deleteImages]`, imageUrl);
           });
         }
-        formData.append(`purchaseDetail[0][deleteImages]`, 'http://link1.com');
-        formData.append(`purchaseDetail[0][deleteImages]`, 'http://link2.com');
+
+        // For testing
+        // formData.append(`purchaseDetail[0][deleteImages]`, 'http://link1.com');
+        // formData.append(`purchaseDetail[0][deleteImages]`, 'http://link2.com');
 
         // Thêm files ảnh mới nếu có
         if (line.imageFiles && line.imageFiles.length > 0) {
