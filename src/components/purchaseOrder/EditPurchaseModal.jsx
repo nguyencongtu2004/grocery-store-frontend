@@ -78,14 +78,9 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
       const updatedLines = [...productLines];
       const currentLine = updatedLines[productIndex];
 
-      // Add existing images to deleteImages array
-      if (currentLine.images && currentLine.images.length > 0) {
-        currentLine.deleteImages = [...currentLine.images];
-      }
-
-      // Update with new images
-      currentLine.images = imageUrls;
-      currentLine.imageFiles = files;
+      // Combine existing images with new ones
+      currentLine.images = [...currentLine.images, ...imageUrls];
+      currentLine.imageFiles = [...(currentLine.imageFiles || []), ...files];
 
       setProductLines(updatedLines);
     } catch (error) {
@@ -241,14 +236,8 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
 
         // Thêm danh sách ảnh cần xóa nếu có
         if (line.deleteImages && line.deleteImages.length > 0) {
-          line.deleteImages.forEach((imageUrl) => {
-            formData.append(`purchaseDetail[${index}][deleteImages]`, imageUrl);
-          });
+          formData.append(`purchaseDetail[${index}][deleteImages]`, JSON.stringify(line.deleteImages));
         }
-
-        // For testing
-        // formData.append(`purchaseDetail[0][deleteImages]`, 'http://link1.com');
-        // formData.append(`purchaseDetail[0][deleteImages]`, 'http://link2.com');
 
         // Thêm files ảnh mới nếu có
         if (line.imageFiles && line.imageFiles.length > 0) {
@@ -284,6 +273,28 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
     const importPrice = Number(line.importPrice);
     const suggestedPrice = Math.ceil(importPrice * 1.3 / 1000) * 1000; // 30% markup rounded to thousands
     handleInputChange(index, "sellingPrice", suggestedPrice.toString());
+  };
+
+  const handleDeleteImage = (productIndex, imgIndex) => {
+    const updatedLines = [...productLines];
+    const currentLine = updatedLines[productIndex];
+
+    // Add image URL to deleteImages array if it's not a blob URL
+    const imageUrl = currentLine.images[imgIndex];
+    if (!imageUrl.startsWith('blob:')) {
+      currentLine.deleteImages = [
+        ...(currentLine.deleteImages || []),
+        imageUrl
+      ];
+    }
+
+    // Remove image and file
+    currentLine.images = currentLine.images.filter((_, idx) => idx !== imgIndex);
+    if (currentLine.imageFiles) {
+      currentLine.imageFiles = currentLine.imageFiles.filter((_, idx) => idx !== imgIndex);
+    }
+
+    setProductLines(updatedLines);
   };
 
   return (
@@ -479,6 +490,7 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
                       <Input
                         type="file"
                         accept="image/*"
+                        multiple
                         className="hidden"
                         id={`image-upload-${productIndex}`}
                         onChange={(e) => handleImageUpload(productIndex, e)}
@@ -490,15 +502,29 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
                         startContent={<ImageIcon size={20} />}
                         className="cursor-pointer"
                       >
-                        {line.images?.length ? 'Change Image' : 'Upload Image'}
+                        {line.images?.length ? 'Add More Images' : 'Upload Images'}
                       </Button>
                       {line.images?.length > 0 && (
-                        <div className="h-20 w-20 relative">
-                          <img
-                            src={line.images[0]}
-                            alt={`Product ${productIndex + 1}`}
-                            className="h-full w-full object-cover rounded"
-                          />
+                        <div className="flex gap-2 overflow-x-auto">
+                          {line.images.map((image, imgIndex) => (
+                            <div key={imgIndex} className="h-20 w-20 relative group">
+                              <img
+                                src={image}
+                                alt={`Product ${productIndex + 1} - Image ${imgIndex + 1}`}
+                                className="h-full w-full object-cover rounded"
+                              />
+                              <Button
+                                isIconOnly
+                                color="danger"
+                                variant="flat"
+                                size="sm"
+                                className="absolute top-0 right-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => handleDeleteImage(productIndex, imgIndex)}
+                              >
+                                <Trash size={16} />
+                              </Button>
+                            </div>
+                          ))}
                         </div>
                       )}
                     </div>
