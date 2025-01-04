@@ -18,34 +18,12 @@ export const formatPrice = (price) => {
   }).format(price);
 };
 
-// export const convertToQuery = (key, value) => {
-//   if (Array.isArray(value)) {
-//     return value.map((v) => `${key}=${v}`).join("&");
-//   }
-//   return `${key}=${value}`;
-// };
-
-// use:
-// const query = useMemo(
-//   () =>
-//     [
-//       convertToQuery("categories", selectedCategories),
-//       convertToQuery("colors", selectedColors),
-//       convertToQuery("priceRange", selectedPriceRange),
-//       convertToQuery("sizes", selectedSizes),
-//       convertToQuery("ratings", selectedRatings),
-//       convertToQuery("isOnSale", isOnSale),
-//       convertToQuery("sortBy", sortBy),
-//       convertToQuery("keyword", keyword),
-//     ].join("&"),
-//   [
-//     isOnSale,
-//     keyword,
-//     selectedCategories,
-//     selectedColors,
-//     selectedPriceRange,
-//     selectedRatings,
-//     selectedSizes,
-//     sortBy,
-//   ]
-// );
+export const formatDateTime = (dateTime) => {
+  const date = new Date(dateTime);
+  const day = date.getDate();
+  const month = date.getMonth() + 1;
+  const year = date.getFullYear();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${day}/${month}/${year} - ${hours}:${minutes < 10 ? `0${minutes}` : minutes}`;
+};

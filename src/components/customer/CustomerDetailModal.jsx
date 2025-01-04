@@ -3,6 +3,7 @@ import { User, Phone, MapPin, ShoppingCart, DollarSign } from 'lucide-react';
 import PropTypes from "prop-types";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomerDetail } from "../../requests/customer";
+import { formatPrice } from "../../ultis/ultis";
 
 export default function CustomerDetailModal({ isOpen, onOpenChange, customerId }) {
   const { data: customerDetail, isLoading, error } = useQuery({
@@ -64,7 +65,7 @@ export default function CustomerDetailModal({ isOpen, onOpenChange, customerId }
                       <p className="font-semibold">Total Spent</p>
                       <p>
                         {customer.totalSpent 
-                          ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(customer.totalSpent) 
+                          ? formatPrice(customer.totalSpent) 
                           : '0 VND'
                         }
                       </p>

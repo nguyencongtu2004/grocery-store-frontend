@@ -5,10 +5,10 @@ import {
   ModalBody,
   ModalFooter,
   Button,
-  Input,
 } from "@nextui-org/react";
 import { Image as ImageIcon } from "lucide-react";
 import PropTypes from "prop-types";
+import { formatDateTime, formatPrice } from "../../ultis/ultis";
 
 export default function ViewProductModal({ isOpen, onClose, product }) {
   // Tạo mảng 4 vị trí cho ảnh
@@ -68,21 +68,21 @@ export default function ViewProductModal({ isOpen, onClose, product }) {
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Price</label>
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                {product?.sellingPrice ? `${product.sellingPrice.toLocaleString()} VND` : "N/A"}
+                {product?.sellingPrice ? `${formatPrice(product.sellingPrice)}` : "N/A"}
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Import Date</label>
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-200">
-                {product?.importDate || "N/A"}
+                {product?.importDate ? formatDateTime(new Date(product.importDate)) : "N/A"}
               </div>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-gray-700">Expiration Date</label>
               <div className="p-3 bg-gray-50 rounded-lg border border-gray-200 text-red-600">
-                {product?.expiredDate || "N/A"}
+                {product?.expireDate ? formatDateTime(new Date(product.expireDate)) : "N/A"}
               </div>
             </div>
           </div>

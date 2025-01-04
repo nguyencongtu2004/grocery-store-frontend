@@ -21,6 +21,7 @@ import {
 import { fetchRevenueReport, fetchProfitReport, fetchSalesReport } from '../requests/report.js';
 import Row from '../components/layout/Row';
 import Column from '../components/layout/Column';
+import { formatPrice } from '../ultis/ultis.js';
 
 const RevenueReportPage = () => {
   const today = new Date().toISOString().split('T')[0];
@@ -145,7 +146,7 @@ const RevenueReportPage = () => {
               <CardBody>
                 <h4 className="text-lg font-medium">Total Revenue</h4>
                 <p className="text-2xl font-bold mt-2">
-                  ${revenueData?.totalRevenue?.toLocaleString()}
+                  {revenueData?.totalRevenue ? formatPrice(revenueData?.totalRevenue) : '-'}
                 </p>
               </CardBody>
             </Card>
@@ -153,7 +154,7 @@ const RevenueReportPage = () => {
               <CardBody>
                 <h4 className="text-lg font-medium">Total Profit</h4>
                 <p className="text-2xl font-bold mt-2">
-                  ${profitData?.totalProfit?.toLocaleString()}
+                  {profitData?.totalProfit ? formatPrice(profitData?.totalProfit) : '-'}
                 </p>
               </CardBody>
             </Card>

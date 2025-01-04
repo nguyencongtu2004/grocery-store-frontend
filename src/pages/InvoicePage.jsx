@@ -8,6 +8,7 @@ import { exportInvoicePDF, fetchInvoices } from "../requests/invoice";
 import AddInvoiceModal from "../components/invoice/AddInvoiceModal";
 import InvoiceDetailModal from "../components/invoice/InvoiceDetailModal";
 import Row from "../components/layout/Row";
+import { formatDateTime, formatPrice } from "../ultis/ultis";
 
 export default function InvoicePage() {
   const [page, setPage] = useState(1);
@@ -197,7 +198,7 @@ export default function InvoicePage() {
       key: "totalPrice",
       label: "TOTAL PRICE",
       render: (invoice) => (
-        <p className="font-semibold text-blue-600">{(invoice.totalPrice || 0).toLocaleString()} VND</p>
+        <p className="font-semibold text-blue-600">{formatPrice(invoice.totalPrice || 0)}</p>
       ),
       align: "center",
     },
@@ -205,7 +206,7 @@ export default function InvoicePage() {
       key: "createdAt",
       label: "CREATE AT",
       render: (invoice) => (
-        <p className="text-sm text-gray-600">{new Date(invoice.createdAt).toLocaleString()}</p>
+        <p className="text-sm text-gray-600">{formatDateTime(new Date(invoice.createdAt))}</p>
       ),
       align: "center",
     },

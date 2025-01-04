@@ -9,14 +9,19 @@ import { fetchUser } from "../../requests/user";
 export default function NavBar({ className }) {
   const location = useLocation();
 
-  const { data } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ["user", getUserId()],
     queryFn: fetchUser,
   });
 
   const role = data?.data?.user.role;
   // const role = "sale"; // for testing
-  const filteredNavigation = navigation.filter((item) => item.role.includes(role));
+  let filteredNavigation;
+  if (isLoading) {
+    filteredNavigation = navigation.filter((item) => item.route.includes("/profile"));
+  } else {
+    filteredNavigation = navigation.filter((item) => item.role.includes(role));
+  }
 
   return (
     <nav className={cn(className, "h-screen w-64 bg-gray-100 p-4")}>

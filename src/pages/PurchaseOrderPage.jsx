@@ -8,6 +8,7 @@ import AddPurchaseModal from "../components/purchaseOrder/AddPurchaseModal";
 import ViewPurchaseModal from "../components/purchaseOrder/ViewPurchaseModal";
 import EditPurchaseModal from "../components/purchaseOrder/EditPurchaseModal";
 import { toast } from "react-hot-toast";
+import { formatDateTime, formatPrice } from "../ultis/ultis";
 
 export default function PurchaseOrderPage() {
   const [page, setPage] = useState(1);
@@ -30,12 +31,6 @@ export default function PurchaseOrderPage() {
   });
 
   const purchaseOrder = data?.data || [];
-
-  const converDate = (date) => {
-    const newDate = new Date(date);
-    const formattedDate = newDate.toLocaleDateString("en-GB");
-    return formattedDate;
-  };
 
   function handleAddPurchaseOrder() {
     setIsAddModalOpen(true);
@@ -92,7 +87,7 @@ export default function PurchaseOrderPage() {
       label: "IMPORT PRICE",
       render: (product) => (
         product?.purchaseDetail?.map((detail, idx) => (
-          <p key={idx}>{(detail?.importPrice || 0)}</p>
+          <p key={idx}>{detail?.importPrice ? formatPrice(detail?.importPrice) : "N/A"}</p>
         )) || <p>N/A</p>
       ),
       align: "center",
@@ -102,7 +97,7 @@ export default function PurchaseOrderPage() {
       label: "EXPIRE DATE",
       render: (product) => (
         product?.purchaseDetail?.map((detail, idx) => (
-          <p key={idx}>{detail?.expireDate ? new Intl.DateTimeFormat('vi-VN').format(new Date(detail.expireDate)) : 'N/A'}</p>
+          <p key={idx}>{detail?.expireDate ? formatDateTime(new Date(detail.expireDate)) : 'N/A'}</p>
         )) || <p>N/A</p>
       ),
       align: "center",
@@ -110,14 +105,14 @@ export default function PurchaseOrderPage() {
     {
       key: "totalPrice",
       label: "TOTAL PRICE",
-      render: (product) => product?.totalPrice || "-",
+      render: (product) => product?.totalPrice ? formatPrice(product?.totalPrice) : "N/A",
       align: "center",
     },
     {
       key: "orderDate",
       label: "ORDER DATE",
       render: (product) => product?.orderDate ? (
-        <p className="truncate max-w-xs">{converDate(product.orderDate)}</p>
+        <p className="truncate max-w-xs">{product.orderDate ? formatDateTime(product.orderDate) : "N/A"}</p>
       ) : "-",
     },
     {

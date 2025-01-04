@@ -43,7 +43,7 @@ export const api = {
     updateById: (id) => `/products/${id}`,
   },
   invoice: {
-    getAll: ({ page, itemsPerPage, searchTerm, sortBy, order }) => 
+    getAll: ({ page, itemsPerPage, searchTerm, sortBy, order }) =>
       `/invoices?page=${page}&limit=${itemsPerPage}&search=${searchTerm ?? ""}&sortBy=${sortBy ?? ""}&order=${order ?? ""}`,
     create: () => "/invoices",
     exportPDF: ({ id }) => `/invoices/${id}/export`,
@@ -66,5 +66,12 @@ export const api = {
     updateCategory: ({ id }) => `/categories/${id}`,
     deleteCategory: ({ id }) => `/categories/${id}`,
     getCategory: ({ id }) => `/categories/${id}`,
+  },
+  discount: {
+    getAll: ({ page, itemsPerPage }) => `/discounts/all?page=${page}&limit=${itemsPerPage}`,
+    createDiscount: () => `/discounts`,
+    updateDiscount: ({ id }) => `/discounts/${id}`,
+    deleteDiscount: ({ id }) => `/discounts/${id}`,
+    getDiscount: ({ id }) => `/discounts/${id}`,
   },
 };

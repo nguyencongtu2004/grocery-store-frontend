@@ -1,6 +1,7 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Image } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Image, Link } from "@nextui-org/react";
 import PropTypes from "prop-types";
 import { exportInvoicePDF } from "../../requests/invoice";
+import { formatDateTime, formatPrice } from "../../ultis/ultis";
 
 export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
   async function handleExport(id) {
@@ -54,7 +55,7 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
                     <strong>Name:</strong> {invoice.customer?.name || "N/A"}
                   </p>
                   <p>
-                    <strong>Email:</strong> {invoice.customer?.email || "N/A"}
+                    <strong>Email:</strong> <Link isExternal href={`mailto:${invoice.customer?.email}`}>{invoice.customer?.email || "N/A"}</Link>
                   </p>
                   <p>
                     <strong>Phone:</strong> {invoice.customer?.phone || "N/A"}
@@ -67,12 +68,12 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
                 <h3 className="text-lg font-semibold text-blue-700">Invoice Summary</h3>
                 <div className="mt-2 space-y-1">
                   <p>
-                    <strong>Date:</strong> {new Date(invoice.createdAt).toLocaleString()}
+                    <strong>Date:</strong> {formatDateTime(new Date(invoice.createdAt))}
                   </p>
                   <p>
                     <strong>Total Price: </strong>
                     <span className="text-blue-600 font-medium">
-                      {(invoice.totalPrice || 0).toLocaleString()}
+                      {formatPrice(invoice.totalPrice || 0)}
                     </span>
                   </p>
                 </div>
@@ -99,11 +100,11 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
                           </div>
                           <div className="text-right">
                             <p className="text-sm text-gray-500">
-                              {detail.product?.sellingPrice?.toLocaleString() || "0"} VND
+                              {formatPrice(detail.product?.sellingPrice || 0)}
                             </p>
                             <p className="font-semibold text-gray-700">
                               Total:{" "}
-                              {(detail.quantity * (detail.product?.sellingPrice || 0)).toLocaleString()} VND
+                              {formatPrice((detail.quantity * (detail.product?.sellingPrice || 0)))}
                             </p>
                           </div>
                         </li>

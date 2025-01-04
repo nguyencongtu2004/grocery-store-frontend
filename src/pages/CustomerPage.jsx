@@ -8,6 +8,7 @@ import { ActionCell, DataTable } from "../components/DataTable";
 import AddCustomerModal from "../components/customer/AddCustomerModal";
 import EditCustomerModal from "../components/customer/EditCustomerModal";
 import CustomerDetailModal from "../components/customer/CustomerDetailModal";
+import { formatPrice } from "../ultis/ultis";
 
 export default function CustomerPage() {
   const [page, setPage] = useState(1);
@@ -81,12 +82,7 @@ export default function CustomerPage() {
       key: "totalSpent",
       label: "TOTAL SPENT",
       render: (customer) => (
-        <p>
-          {customer.totalSpent
-            ? new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(customer.totalSpent)
-            : '0 VND'
-          }
-        </p>
+        <p>{formatPrice(customer.totalSpent || 0)}</p>
       ),
       align: "center"
     },

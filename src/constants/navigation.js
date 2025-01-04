@@ -19,6 +19,7 @@ import PurchaseOrderPage from "../pages/PurchaseOrderPage";
 import ProviderPage from "../pages/ProviderPage";
 import CategoryPage from "../pages/CategoryPage";
 import ProfilePage from "../pages/ProfilePage";
+import DiscountPage from "../pages/DiscountPage";
 
 export const navigation = [
   {
@@ -69,6 +70,13 @@ export const navigation = [
     icon: ShoppingCart,
     element: PurchaseOrderPage,
     role: ["manager", "warehouse"],
+  },
+  {
+    title: "Discount Management",
+    route: "/discounts",
+    icon: Percent,
+    element: DiscountPage,
+    role: ["manager"],
   },
   {
     title: "Provider Management",

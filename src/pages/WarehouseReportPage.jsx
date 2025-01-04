@@ -24,6 +24,8 @@ import {
 import { stockByCategory, expiringProducts, importByProvider, topSellingProducts } from '../requests/report.js';
 import Row from '../components/layout/Row';
 import Column from '../components/layout/Column';
+import { formatDateTime, formatPrice } from '../ultis/ultis.js';
+import { Calendar, Package, ShoppingCart } from 'lucide-react';
 
 const WarehouseReportPage = () => {
   const today = new Date().toISOString().split('T')[0];
@@ -172,13 +174,24 @@ const WarehouseReportPage = () => {
                   </ResponsiveContainer>
                   <div className="mt-4">
                     {formatImportData(importData).map((entry) => (
-                      <Column key={entry.providerId} className="mb-4 p-2 border rounded shadow-sm">
-                        <span className="font-bold text-lg">{entry.name}</span>
-                        <span className="text-gray-600">{entry.value} units</span>
+                      <Column key={entry.providerId} className="mb-4 p-4 border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                        <Row className="items-center mb-2">
+                          <Package className="w-5 h-5 text-blue-500 mr-2" />
+                          <span className="font-bold text-lg">{entry.name}</span>
+                        </Row>
+                        <Row className="items-center text-gray-600 mb-3">
+                          <ShoppingCart className="w-4 h-4 mr-2" />
+                          <span>{entry.value} units</span>
+                        </Row>
                         {entry.purchaseOrders.map((order) => (
-                          <div key={order.orderId} className="mt-2">
-                            <p className="text-sm text-gray-500">{new Date(order.orderDate).toLocaleDateString()}</p>
-                            <span className="font-semibold">${order.totalPrice.toFixed(2)}</span>
+                          <div key={order.orderId} className="mt-3 pt-3 border-t border-gray-200">
+                            <Row className="items-center text-sm text-gray-500 mb-1">
+                              <Calendar className="w-4 h-4 mr-2" />
+                              <p>{order.orderDate ? formatDateTime(new Date(order.orderDate)) : 'N/A'}</p>
+                            </Row>
+                            <Row className="items-center">
+                              <span className="font-semibold">{"Total Price: " + formatPrice(order.totalPrice)}</span>
+                            </Row>
                           </div>
                         ))}
                       </Column>
@@ -197,7 +210,7 @@ const WarehouseReportPage = () => {
                   {formatExpiringData(expiringData).map((product) => (
                     <div key={product.productId} className="flex justify-between mb-2">
                       <span>{product.name}</span>
-                      <span>{new Date(product.expireDate).toLocaleDateString()}</span>
+                      <span>{product.expireDate ? formatDateTime(new Date(product.expireDate)) : 'N/A'}</span>
                     </div>
                   ))}
                 </div>

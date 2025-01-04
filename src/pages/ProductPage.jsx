@@ -6,6 +6,7 @@ import { Image, Pagination } from "@nextui-org/react";
 import { ActionCell, DataTable } from "../components/DataTable";
 import ViewProductModal from "../components/product/ViewProductModal";
 import SearchInput from "../components/SearchInput";
+import { formatDateTime, formatPrice } from "../ultis/ultis";
 
 export default function ProductPage() {
   const [page, setPage] = useState(1);
@@ -71,7 +72,7 @@ export default function ProductPage() {
     {
       key: "sellingPrice",
       label: "SELLING PRICE",
-      render: (product) => <p>{product.sellingPrice || "N/A"}</p>,
+      render: (product) => <p>{formatPrice(product.sellingPrice) || "N/A"}</p>,
       align: "center",
     },
     {
@@ -83,13 +84,13 @@ export default function ProductPage() {
     {
       key: "importDate",
       label: "IMPORT DATE",
-      render: (product) => <p>{new Date(product.importDate).toLocaleDateString() || "N/A"}</p>,
+      render: (product) => <p>{product.importDate ? formatDateTime(new Date(product.importDate)) : "N/A"}</p>,
       align: "center",
     },
     {
       key: "expireDate",
       label: "EXPIRE DATE",
-      render: (product) => <p>{new Date(product.expireDate).toLocaleDateString() || "N/A"}</p>,
+      render: (product) => <p>{product.expireDate ? formatDateTime(new Date(product.expireDate)) : "N/A"}</p>,
       align: "center",
     },
     {

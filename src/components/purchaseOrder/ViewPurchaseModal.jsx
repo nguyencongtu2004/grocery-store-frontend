@@ -11,30 +11,17 @@ import {
 } from "@nextui-org/react";
 import { Calendar, Package, DollarSign, AlertCircle } from "lucide-react";
 import PropTypes from "prop-types";
+import { formatDateTime, formatPrice } from "../../ultis/ultis";
 
 export default function ViewPurchaseModal({ isOpen, onClose, purchaseOrder }) {
   if (!purchaseOrder) return null;
 
-  const formatDate = (dateString) => {
-    if (!dateString) return "-";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  };
-
-  const formatCurrency = (amount) => {
-    if (!amount && amount !== 0) return "-";
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD'
-    }).format(amount);
-  };
-
   const calculateTotalAmount = (detail) => {
-    return (detail.importPrice || 0) * (detail.quantity || 0);
+    return (detail.importPrice || 0) * (detail.stockQuantity || 0);
   };
+
+  console.log(purchaseOrder);
+  
 
   return (
     <Modal
@@ -74,7 +61,7 @@ export default function ViewPurchaseModal({ isOpen, onClose, purchaseOrder }) {
                     <div>
                       <p className="text-sm text-gray-600">Order Date</p>
                       <p className="font-medium">
-                        {formatDate(purchaseOrder.orderDate)}
+                        {purchaseOrder.orderDate ? formatDateTime(new Date(purchaseOrder.orderDate)) : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -102,7 +89,7 @@ export default function ViewPurchaseModal({ isOpen, onClose, purchaseOrder }) {
                           >
                             <div className="flex items-center gap-1 text-sm text-orange-600 bg-orange-100 px-2 py-1 rounded-full">
                               <AlertCircle className="w-4 h-4" />
-                              {formatDate(detail.expireDate)}
+                              {detail.expireDate ? formatDateTime(new Date(detail.expireDate)) : "N/A"}
                             </div>
                           </Tooltip>
                         )}
@@ -142,16 +129,16 @@ export default function ViewPurchaseModal({ isOpen, onClose, purchaseOrder }) {
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Import Price</p>
-                          <p className="font-medium">{(detail.importPrice)}</p>
+                          <p className="font-medium">{formatPrice(detail.importPrice)}</p>
                         </div>
                         <div>
                           <p className="text-sm text-gray-600">Quantity</p>
-                          <p className="font-medium">{detail.quantity || 0} units</p>
+                          <p className="font-medium">{detail.stockQuantity || 0} units</p>
                         </div>
                         <div className="lg:col-span-2">
                           <p className="text-sm text-gray-600">Total Amount</p>
                           <p className="font-medium text-blue-600">
-                            {(calculateTotalAmount(detail))}
+                            {formatPrice(calculateTotalAmount(detail))}
                           </p>
                         </div>
                       </div>
@@ -170,7 +157,7 @@ export default function ViewPurchaseModal({ isOpen, onClose, purchaseOrder }) {
                     <span className="text-lg">Grand Total</span>
                   </div>
                   <span className="text-1xl font-bold">
-                    {(purchaseOrder.totalPrice)}
+                    {formatPrice(purchaseOrder.totalPrice)}
                   </span>
                 </div>
               </CardBody>
@@ -205,7 +192,7 @@ ViewPurchaseModal.propTypes = {
           name: PropTypes.string,
         }),
         importPrice: PropTypes.number,
-        quantity: PropTypes.number,
+        stockQuantity: PropTypes.number,
         expireDate: PropTypes.string,
       })
     ),
