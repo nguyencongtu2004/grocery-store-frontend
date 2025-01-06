@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Modal,
   ModalContent,
@@ -7,17 +7,12 @@ import {
   ModalFooter,
   Button,
   Input,
-  Dropdown,
-  DropdownTrigger,
-  DropdownMenu,
-  DropdownItem
 } from "@nextui-org/react";
-import { Trash, ChevronDown } from "lucide-react";
+import { Trash, Search } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createInvoice } from "../../requests/invoice";
 import { fetchCustomers } from "../../requests/customer";
 import { fetchProduct } from "../../requests/product";
-import { fetchCategories } from "../../requests/category";
 import PropTypes from "prop-types";
 
 export default function AddInvoiceModal({ isOpen, onClose }) {
@@ -30,9 +25,14 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
   }]);
 
   const [customers, setCustomers] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [productsByCategory, setProductsByCategory] = useState({});
+  const [allProducts, setAllProducts] = useState([]);
+  const [filteredCustomers, setFilteredCustomers] = useState([]);
+  const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const [customerQuery, setCustomerQuery] = useState("");
+  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
+  const [activeSearchIndex, setActiveSearchIndex] = useState(null);
+  const customerRef = useRef(null);
   const queryClient = useQueryClient();
 
   const extractArrayData = (response, path) => {
@@ -56,17 +56,20 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
       if (!isOpen) return;
 
       try {
-        const [customersRes, categoriesRes] = await Promise.all([
+        const [customersRes, productsRes] = await Promise.all([
           fetchCustomers({ page: 1, itemsPerPage: 100 }),
-          fetchCategories({}),
+          fetchProduct({}),
         ]);
 
         const customersList = extractArrayData(customersRes, 'data');
-        const categoriesList = extractArrayData(categoriesRes?.data, 'categories');
+        const productsList = extractArrayData(productsRes, 'data.data') ||
+          extractArrayData(productsRes, 'data') ||
+          [];
 
         setCustomers(customersList);
-        setCategories(categoriesList);
+        setAllProducts(productsList);
 
+        // Reset form
         setProductLines([{
           category: "",
           categoryId: "",
@@ -75,7 +78,8 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
           quantity: 1
         }]);
         setSelectedCustomer(null);
-        setProductsByCategory({});
+        setCustomerQuery("");
+        setActiveSearchIndex(null);
       } catch (error) {
         console.error("Error fetching initial data:", error);
       }
@@ -84,27 +88,65 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     fetchInitialData();
   }, [isOpen]);
 
-  const fetchProductsByCategory = async (categoryId) => {
-    if (!categoryId) return;
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (customerRef.current && !customerRef.current.contains(event.target)) {
+        setShowCustomerDropdown(false);
+      }
+    };
 
-    try {
-      const response = await fetchProduct({ categoryId });
-      const productsList = extractArrayData(response, 'data.data') ||
-        extractArrayData(response, 'data') ||
-        [];
-      console.log(productsList);
-      
-      setProductsByCategory(prev => ({
-        ...prev,
-        [categoryId]: productsList
-      }));
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      setProductsByCategory(prev => ({
-        ...prev,
-        [categoryId]: []
-      }));
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Customer search handling
+  useEffect(() => {
+    if (customerQuery.trim() === "") {
+      setFilteredCustomers([]);
+      setSelectedCustomer(null);
+      return;
     }
+
+    const filtered = customers.filter(customer =>
+      customer.name.toLowerCase().includes(customerQuery.toLowerCase())
+    );
+    setFilteredCustomers(filtered);
+    setShowCustomerDropdown(true);
+  }, [customerQuery, customers]);
+
+  // Product search handling
+  const handleProductSearch = (index, query) => {
+    const updatedLines = [...productLines];
+    updatedLines[index].product = query;
+    updatedLines[index].productId = "";
+    updatedLines[index].category = "";
+    updatedLines[index].categoryId = "";
+    setProductLines(updatedLines);
+
+    if (query.trim() === "") {
+      setFilteredProducts([]);
+      return;
+    }
+
+    const filtered = allProducts.filter(product =>
+      product.name.toLowerCase().includes(query.toLowerCase())
+    );
+    setFilteredProducts(filtered);
+    setActiveSearchIndex(index);
+  };
+
+  const handleProductSelect = (index, product) => {
+    const updatedLines = [...productLines];
+    updatedLines[index] = {
+      ...updatedLines[index],
+      product: product.name,
+      productId: product._id,
+      category: product.category?.name || "",
+      categoryId: product.category?._id || "",
+    };
+    setProductLines(updatedLines);
+    setFilteredProducts([]);
+    setActiveSearchIndex(null);
   };
 
   const addProductLine = () => {
@@ -118,35 +160,6 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     if (productLines.length > 1) {
       setProductLines(productLines.filter((_, i) => i !== index));
     }
-  };
-
-  const handleCategorySelect = async (index, categoryId) => {
-    const category = categories.find(c => c._id === categoryId);
-    if (!category) return;
-
-    const updatedLines = [...productLines];
-    updatedLines[index].category = category.name;
-    updatedLines[index].categoryId = category._id;
-    updatedLines[index].product = "";
-    updatedLines[index].productId = "";
-    setProductLines(updatedLines);
-
-    if (!productsByCategory[categoryId]) {
-      await fetchProductsByCategory(categoryId);
-    }
-  };
-
-  const handleProductSelect = (index, productId) => {
-    const currentLine = productLines[index];
-    const productsForCategory = productsByCategory[currentLine.categoryId] || [];
-    const product = productsForCategory.find(p => p._id === productId);
-
-    if (!product) return;
-
-    const updatedLines = [...productLines];
-    updatedLines[index].product = product.name;
-    updatedLines[index].productId = product._id;
-    setProductLines(updatedLines);
   };
 
   const { mutate: addInvoice, isLoading: isAdding } = useMutation({
@@ -164,11 +177,6 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (!selectedCustomer) {
-      alert("Please select a customer");
-      return;
-    }
-
     const invalidLines = productLines.some(line => !line.productId || line.quantity < 1);
     if (invalidLines) {
       alert("Please fill in all product lines correctly");
@@ -176,14 +184,12 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     }
 
     const requestData = {
-      customer: selectedCustomer._id,
+      customer: selectedCustomer?._id || null,  // This will be null when no customer is selected
       invoiceDetails: productLines.map((line) => ({
         product: line.productId,
         quantity: parseInt(line.quantity, 10),
       })),
     };
-
-    console.log(requestData);
 
     addInvoice({ data: requestData });
   };
@@ -200,94 +206,85 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
           <ModalHeader>New Invoice</ModalHeader>
           <ModalBody>
             <div className="space-y-6">
-              <Dropdown>
-                <DropdownTrigger>
-                  <Button
-                    variant="bordered"
-                    className="w-full justify-between"
-                    endContent={<ChevronDown className="text-small" />}
-                  >
-                    {selectedCustomer ? selectedCustomer.name : "Select customer"}
-                  </Button>
-                </DropdownTrigger>
-                <DropdownMenu
-                  aria-label="Customer selection"
-                  selectionMode="single"
-                  className="max-h-64 overflow-y-auto"
-                  selectedKeys={selectedCustomer ? [selectedCustomer._id] : []}
-                  onSelectionChange={(keys) => {
-                    const selectedId = Array.from(keys)[0];
-                    setSelectedCustomer(customers.find(c => c._id === selectedId));
+              {/* Customer Search with Autocomplete */}
+              <div className="relative" ref={customerRef}>
+                <Input
+                  startContent={<Search size={18} />}
+                  label="Search Customer (Optional)"
+                  placeholder="Start typing customer name..."
+                  value={customerQuery}
+                  onChange={(e) => {
+                    setCustomerQuery(e.target.value);
+                    if (e.target.value.trim() === "") {
+                      setSelectedCustomer(null);
+                    }
                   }}
-                >
-                  {customers.map((customer) => (
-                    <DropdownItem key={customer._id}>
-                      {customer.name}
-                    </DropdownItem>
-                  ))}
-                </DropdownMenu>
-              </Dropdown>
-
-              {productLines.map((line, index) => (
-                <div key={index} className="grid grid-cols-[1fr_1fr_auto_auto] gap-4 items-start">
-                  <div className="space-y-4">
-                    <Dropdown>
-                      <DropdownTrigger>
-                        <Button
-                          variant="bordered"
-                          className="w-full justify-between"
-                          endContent={<ChevronDown className="text-small" />}
-                        >
-                          {line.category || "Select category"}
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu
-                        aria-label="Category selection"
-                        selectionMode="single"
-                        className="max-h-64 overflow-y-auto"
-                        selectedKeys={line.categoryId ? [line.categoryId] : []}
-                        onSelectionChange={(keys) => {
-                          const selectedId = Array.from(keys)[0];
-                          handleCategorySelect(index, selectedId);
+                  onFocus={() => setShowCustomerDropdown(true)}
+                  className="w-full"
+                />
+                {showCustomerDropdown && filteredCustomers.length > 0 && (
+                  <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                    {filteredCustomers.map((customer) => (
+                      <div
+                        key={customer._id}
+                        className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                        onClick={() => {
+                          setSelectedCustomer(customer);
+                          setCustomerQuery(customer.name);
+                          setShowCustomerDropdown(false);
                         }}
                       >
-                        {categories.map((category) => (
-                          <DropdownItem key={category._id}>
-                            {category.name}
-                          </DropdownItem>
-                        ))}
-                      </DropdownMenu>
-                    </Dropdown>
-
-                    <Dropdown isDisabled={!line.categoryId}>
-                      <DropdownTrigger>
-                        <Button
-                          variant="bordered"
-                          className="w-full justify-between"
-                          endContent={<ChevronDown className="text-small" />}
-                          disabled={!line.categoryId}
-                        >
-                          {line.product || "Select product"}
-                        </Button>
-                      </DropdownTrigger>
-                      <DropdownMenu
-                        aria-label="Product selection"
-                        selectionMode="single"
-                        className="max-h-64 overflow-y-auto"
-                        selectedKeys={line.productId ? [line.productId] : []}
-                        onSelectionChange={(keys) => {
-                          const selectedId = Array.from(keys)[0];
-                          handleProductSelect(index, selectedId);
-                        }}
-                      >
-                        {(productsByCategory[line.categoryId] || []).map((product) => (
-                          <DropdownItem key={product._id}>
-                            {product.name}
-                          </DropdownItem>
-                        ))}
-                      </DropdownMenu>
-                    </Dropdown>
+                        {customer.name}
+                      </div>
+                    ))}
                   </div>
+                )}
+              </div>
+
+              {/* Selected Customer Display */}
+              {selectedCustomer && (
+                <div className="p-3 bg-blue-50 rounded-lg">
+                  <p className="text-sm text-blue-800">
+                    Selected Customer: <span className="font-semibold">{selectedCustomer.name}</span>
+                  </p>
+                </div>
+              )}
+
+              {/* Product Lines */}
+              {productLines.map((line, index) => (
+                <div key={index} className="flex items-center gap-4 p-4 bg-gray-50 rounded-lg relative">
+                  <div className="flex-grow">
+                    <Input
+                      startContent={<Search size={18} />}
+                      label="Search Product"
+                      placeholder="Start typing product name..."
+                      value={line.product}
+                      onChange={(e) => handleProductSearch(index, e.target.value)}
+                      className="w-full"
+                    />
+                    {activeSearchIndex === index && filteredProducts.length > 0 && (
+                      <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                        {filteredProducts.map((product) => (
+                          <div
+                            key={product._id}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                            onClick={() => handleProductSelect(index, product)}
+                          >
+                            <div className="font-medium">{product.name}</div>
+                            <div className="text-sm text-gray-500">
+                              Category: {product.category?.name || 'N/A'}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {line.category && (
+                    <div className="text-sm text-gray-500 min-w-[120px]">
+                      Category: {line.category}
+                    </div>
+                  )}
 
                   <Input
                     type="number"
@@ -298,7 +295,8 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                       updatedLines[index].quantity = e.target.value;
                       setProductLines(updatedLines);
                     }}
-                    placeholder="Quantity"
+                    label="Qty"
+                    className="w-24"
                   />
 
                   <Button
@@ -307,6 +305,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                     variant="light"
                     onClick={() => deleteProductLine(index)}
                     disabled={productLines.length === 1}
+                    className="mt-5"
                   >
                     <Trash size={20} />
                   </Button>
