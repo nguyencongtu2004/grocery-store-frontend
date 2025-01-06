@@ -248,7 +248,7 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
       });
 
       const response = await updatePurchaseOrder({ id: purchaseOrder._id, formData });
-      if (response.status === 201) {
+      if (response.status === 200) {
         toast.success("Purchase order updated successfully");
         onSuccess?.();
         onClose();
