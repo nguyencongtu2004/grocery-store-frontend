@@ -18,19 +18,19 @@ export default function InvoicePage() {
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filters, setFilters] = useState({
-    sortBy: "totalPrice",
-    order: "asc"
+    sortBy: "createdAt",
+    order: "desc"  // Changed to make newest first as default
   });
   const itemsPerPage = 10;
 
-  // Fetch tất cả data một lần
+  // Fetch all data at once
   const { data, isLoading, isError } = useQuery({
     queryKey: ["invoices"],
     queryFn: ({ signal }) => fetchInvoices({ signal }),
     keepPreviousData: true,
   });
 
-  // Xử lý và tính toán totalPrice cho mỗi invoice
+  // Process and calculate totalPrice for each invoice
   const processedInvoices = useMemo(() => {
     const rawInvoices = data?.data?.data || [];
     return rawInvoices.map((invoice) => {
@@ -47,11 +47,11 @@ export default function InvoicePage() {
     });
   }, [data]);
 
-  // Lọc và sắp xếp invoices
+  // Filter and sort invoices
   const filteredAndSortedInvoices = useMemo(() => {
     let result = [...processedInvoices];
 
-    // Áp dụng search theo id và tên khách hàng
+    // Apply search filter for id and customer name
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase().trim();
       result = result.filter(invoice =>
@@ -60,7 +60,7 @@ export default function InvoicePage() {
       );
     }
 
-    // Sắp xếp
+    // Sort
     result.sort((a, b) => {
       let compareValueA, compareValueB;
 
@@ -88,7 +88,7 @@ export default function InvoicePage() {
     return result;
   }, [processedInvoices, searchTerm, filters]);
 
-  // Phân trang
+  // Pagination
   const paginatedInvoices = useMemo(() => {
     const startIndex = (page - 1) * itemsPerPage;
     return filteredAndSortedInvoices.slice(startIndex, startIndex + itemsPerPage);
@@ -109,32 +109,32 @@ export default function InvoicePage() {
       const response = await exportInvoicePDF({ id });
 
       if (response.headers['content-type']?.includes('application/pdf')) {
-        // Tạo Blob từ dữ liệu
+        // Create Blob from data
         const blob = new Blob([response.data], { type: 'application/pdf' });
 
-        // Tạo URL từ Blob
+        // Create URL from Blob
         const url = URL.createObjectURL(blob);
 
-        // Mở file PDF trong tab mới
+        // Open PDF in new tab
         const newWindow = window.open(url, '_blank');
 
         if (newWindow) {
-          // Chờ file PDF được load xong
+          // Wait for PDF to load
           newWindow.onload = () => {
-            // Gọi hộp thoại in
+            // Call print dialog
             newWindow.print();
           };
         } else {
-          console.error('Không thể mở tab mới. Hãy kiểm tra cài đặt popup của trình duyệt.');
+          console.error('Cannot open new tab. Please check browser popup settings.');
         }
 
-        // Xóa URL tạm sau một thời gian
+        // Clean up temporary URL
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       } else {
-        console.error('Response không phải là file PDF');
+        console.error('Response is not a PDF file');
       }
     } catch (error) {
-      console.error('Lỗi khi xuất PDF:', error);
+      console.error('Error exporting PDF:', error);
     }
   }
 
@@ -220,7 +220,7 @@ export default function InvoicePage() {
     },
     {
       key: "actions",
-      label: "ACTION  ",
+      label: "ACTION",
       render: (invoice) => (
         <Row className="gap-2">
           <Eye
@@ -253,7 +253,6 @@ export default function InvoicePage() {
         buttonTitle="Add New Invoice"
         onButonClick={() => {
           setIsAddModalOpen(true);
-          console.log("Button clicked");
         }}
         isLoading={isLoading}
       />
@@ -289,6 +288,7 @@ export default function InvoicePage() {
               const [sortBy, order] = key.split("-");
               handleFilterChange({ sortBy, order });
             }}
+            selectedKeys={[`${filters.sortBy}-${filters.order}`]}
           >
             <DropdownItem key="totalPrice-asc">Price: Low to High</DropdownItem>
             <DropdownItem key="totalPrice-desc">Price: High to Low</DropdownItem>

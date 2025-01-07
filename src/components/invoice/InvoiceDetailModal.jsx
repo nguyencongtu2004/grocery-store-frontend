@@ -1,9 +1,19 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Image, Link } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Image, Link, Tooltip } from "@nextui-org/react";
+import { HelpCircle } from "lucide-react";
 import PropTypes from "prop-types";
 import { exportInvoicePDF } from "../../requests/invoice";
 import { formatDateTime, formatPrice } from "../../ultis/ultis";
 
 export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
+  const calculateDiscountAmount = (totalPrice, discount) => {
+    if (!discount) return 0;
+    const discountAmount = (totalPrice * discount.discountInPercent) / 100;
+    return Math.min(discountAmount, discount.maxDiscountValue);
+  };
+
+  const discountAmount = calculateDiscountAmount(invoice?.totalPrice, invoice?.discount);
+  const finalPrice = (invoice?.totalPrice || 0) - discountAmount;
+
   async function handleExport(id) {
     try {
       const response = await exportInvoicePDF({ id });
@@ -47,7 +57,7 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
         <ModalBody>
           {invoice ? (
             <div className="space-y-8">
-              {/* Customer Info */}
+              {/* Customer Info section remains the same */}
               <div className="bg-gray-50 rounded-lg p-4 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-700">Customer Information</h3>
                 <div className="mt-2 space-y-1">
@@ -63,24 +73,52 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
                 </div>
               </div>
 
-              {/* Invoice Summary */}
+              {/* Updated Invoice Summary with Discount */}
               <div className="bg-blue-50 rounded-lg p-4 shadow-sm">
                 <h3 className="text-lg font-semibold text-blue-700">Invoice Summary</h3>
-                <div className="mt-2 space-y-1">
+                <div className="mt-2 space-y-2">
                   <p>
                     <strong>Date:</strong> {formatDateTime(new Date(invoice.createdAt))}
                   </p>
                   <p>
-                    <strong>Total Price: </strong>
-                    <span className="text-blue-600 font-medium">
+                    <strong>Subtotal: </strong>
+                    <span className="text-gray-600">
                       {formatPrice(invoice.totalPrice || 0)}
                     </span>
                   </p>
+                  
+                  {invoice.discount && (
+                    <div className="flex items-center gap-2">
+                      <strong>Discount:</strong>
+                      <span className="text-green-600 bg-green-100 px-2 py-1 rounded-full text-sm">
+                        {invoice.discount.discountInPercent}% OFF
+                      </span>
+                      <Tooltip 
+                        content={`Maximum discount: ${formatPrice(invoice.discount.maxDiscountValue)}`}
+                      >
+                        <HelpCircle className="w-4 h-4 text-gray-400" />
+                      </Tooltip>
+                      <span className="text-green-600">
+                        -{formatPrice(discountAmount)}
+                      </span>
+                    </div>
+                  )}
+                  
+                  <div className="border-t border-blue-200 pt-2 mt-2">
+                    <p className="flex items-center">
+                      <strong>Final Price: </strong>
+                      <span className="text-blue-600 font-medium ml-2">
+                        {formatPrice(finalPrice)}
+                      </span>
+                    </p>
+                  </div>
                 </div>
               </div>
 
-              {/* Product List */}
+              {/* Product List section remains the same */}
               <div className="bg-white rounded-lg p-4 shadow-sm">
+                {/* ... existing product list code ... */}
+                <div className="bg-white rounded-lg p-4 shadow-sm">
                 <h3 className="text-lg font-semibold text-gray-700">Products</h3>
                 <div className="mt-4 border-t border-gray-200">
                   {invoice.invoiceDetails?.length > 0 ? (
@@ -114,6 +152,7 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
                     <p className="text-gray-500 mt-4">No products found.</p>
                   )}
                 </div>
+              </div>
               </div>
             </div>
           ) : (
