@@ -108,7 +108,7 @@ export default function InvoicePage() {
     try {
       const response = await exportInvoicePDF({ id });
 
-      if (response.headers['content-type'] === 'application/pdf') {
+      if (response.headers['content-type']?.includes('application/pdf')) {
         // Tạo Blob từ dữ liệu
         const blob = new Blob([response.data], { type: 'application/pdf' });
 
