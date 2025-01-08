@@ -1,10 +1,11 @@
-import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Tooltip } from "@nextui-org/react";
+import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input, Dropdown, DropdownTrigger, DropdownMenu, DropdownItem, Tooltip, Autocomplete, AutocompleteItem } from "@nextui-org/react";
 import { Trash, Image as ImageIcon, ChevronDown, HelpCircle, Calculator } from "lucide-react";
 import PropTypes from "prop-types";
 import { useState, useEffect, useCallback } from "react";
 import { fetchProviders } from "../../requests/provider";
 import { fetchCategories } from "../../requests/category";
 import { createPurchaseOrder } from "../../requests/purchaseOrder";
+import { fetchProduct, searchProducts } from "../../requests/product";
 import { toast } from "react-hot-toast";
 
 export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
@@ -26,6 +27,9 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
   }]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState({});
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchTimer, setSearchTimer] = useState(null);
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -268,6 +272,50 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
     handleInputChange(index, "sellingPrice", suggestedPrice.toString());
   };
 
+  const handleProductSearch = useCallback(async (index, value) => {
+    // Clear previous timer
+    if (searchTimer) {
+      clearTimeout(searchTimer);
+    }
+
+    // Set new timer
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearching(true);
+        const response = await fetchProduct({ keyword: value, page: 1, itemsPerPage: 10 });
+        if (response?.data?.data) {
+          setSearchResults(response.data.data);
+        }
+      } catch (error) {
+        toast.error("Unable to search products");
+      } finally {
+        setIsSearching(false);
+      }
+    }, 500); // Delay 500ms
+
+    setSearchTimer(timer);
+  }, [searchTimer]);
+
+  const handleProductSelect = (index, product) => {
+    const updatedLines = [...productLines];
+    updatedLines[index] = {
+      ...updatedLines[index],
+      name: product.name,
+      category: { _id: product.category._id },
+      categoryId: product.category._id,
+      sellingPrice: product.sellingPrice.toString(),
+      images: product.images || [],
+      imageFiles: [] // Reset image files since we're using existing images
+    };
+    setProductLines(updatedLines);
+    setErrors(prev => ({
+      ...prev,
+      [`name-${index}`]: null,
+      [`category-${index}`]: null,
+      [`sellingPrice-${index}`]: null
+    }));
+  };
+
   return (
     <Modal
       isOpen={isOpen}
@@ -363,6 +411,37 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Autocomplete
+                      label="Search Product"
+                      placeholder="Type to search products"
+                      variant="bordered"
+                      isLoading={isSearching}
+                      defaultItems={searchResults}
+                      onInputChange={(value) => handleProductSearch(productIndex, value)}
+                      onSelectionChange={(key) => {
+                        const selected = searchResults.find(item => item._id === key);
+                        if (selected) handleProductSelect(productIndex, selected);
+                      }}
+                    >
+                      {(item) => (
+                        <AutocompleteItem key={item._id} textValue={item.name}>
+                          <div className="flex items-center gap-2">
+                            {item.images?.[0] && (
+                              <img
+                                src={item.images[0]}
+                                alt={item.name}
+                                className="w-8 h-8 object-cover rounded"
+                              />
+                            )}
+                            <div>
+                              <div className="text-sm">{item.name}</div>
+                              <div className="text-xs text-gray-500">{item.category.name}</div>
+                            </div>
+                          </div>
+                        </AutocompleteItem>
+                      )}
+                    </Autocomplete>
+
                     <Input
                       label="Product Name"
                       placeholder="Enter product name"

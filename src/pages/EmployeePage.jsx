@@ -68,7 +68,7 @@ export default function EmployeePage() {
     },
     {
       key: "actions",
-      label: "",
+      label: "ACTIONS",
       render: (employee) => (
         <ActionCell
           onView={() => handleEmployeeDetail(employee)}

@@ -80,35 +80,35 @@ export default function PurchaseOrderPage() {
       render: (product) => (page - 1) * itemsPerPage + (purchaseOrder.indexOf(product) + 1),
       align: "center"
     },
-    {
-      key: "productImage",
-      label: "IMAGE",
-      render: (product) => (
-        product?.purchaseDetail?.map((detail, index) => (
-          <Image
-            key={index}
-            src={detail?.images?.[0] || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"}
-            alt="Product"
-            className="w-10 h-10 object-cover rounded shadow-sm"
-          />
-        ))
-      ),
-      align: "center",
-    },
-    {
-      key: "productName",
-      label: "PRODUCT NAME",
-      render: (product) => (
-        <div className="flex flex-col">
-          {product?.purchaseDetail?.map((detail, index) => (
-            <p key={index} className="text-sm text-gray-700">
-              {detail?.name || "Unnamed Product"}
-            </p>
-          ))}
-        </div>
-      ),
-      align: "left",
-    },
+    // {
+    //   key: "productImage",
+    //   label: "IMAGE",
+    //   render: (product) => (
+    //     product?.purchaseDetail?.map((detail, index) => (
+    //       <Image
+    //         key={index}
+    //         src={detail?.images?.[0] || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"}
+    //         alt="Product"
+    //         className="w-10 h-10 object-cover rounded shadow-sm"
+    //       />
+    //     ))
+    //   ),
+    //   align: "center",
+    // },
+    // {
+    //   key: "productName",
+    //   label: "PRODUCT NAME",
+    //   render: (product) => (
+    //     <div className="flex flex-col">
+    //       {product?.purchaseDetail?.map((detail, index) => (
+    //         <p key={index} className="text-sm text-gray-700">
+    //           {detail?.name || "Unnamed Product"}
+    //         </p>
+    //       ))}
+    //     </div>
+    //   ),
+    //   align: "left",
+    // },
     {
       key: "importPrice",
       label: "IMPORT PRICE",
@@ -119,16 +119,16 @@ export default function PurchaseOrderPage() {
       ),
       align: "center",
     },
-    {
-      key: "expireDate",
-      label: "EXPIRE DATE",
-      render: (product) => (
-        product?.purchaseDetail?.map((detail, idx) => (
-          <p key={idx}>{detail?.expireDate ? formatDateTime(new Date(detail.expireDate)) : 'N/A'}</p>
-        )) || <p>N/A</p>
-      ),
-      align: "center",
-    },
+    // {
+    //   key: "expireDate",
+    //   label: "EXPIRE DATE",
+    //   render: (product) => (
+    //     product?.purchaseDetail?.map((detail, idx) => (
+    //       <p key={idx}>{detail?.expireDate ? formatDateTime(new Date(detail.expireDate)) : 'N/A'}</p>
+    //     )) || <p>N/A</p>
+    //   ),
+    //   align: "center",
+    // },
     {
       key: "totalPrice",
       label: "TOTAL PRICE",
@@ -149,7 +149,7 @@ export default function PurchaseOrderPage() {
     },
     {
       key: "actions",
-      label: "",
+      label: "ACTIONS",
       render: (product) => (
         <ActionCell
           onView={() => handleViewPurchaseDetail(product)}

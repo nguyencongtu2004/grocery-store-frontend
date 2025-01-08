@@ -161,55 +161,55 @@ export default function InvoicePage() {
       render: (index) => (page - 1) * itemsPerPage + (processedInvoices.indexOf(index) + 1),
       align: "center",
     },
-    {
-      key: "productImage",
-      label: "PRODUCT IMAGE",
-      render: (invoice) => (
-        invoice?.invoiceDetails?.map((detail, index) => (
-          <Image
-            key={index}
-            src={detail.product?.images?.[0] || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"}
-            alt="Product"
-            className="w-10 h-10 object-cover rounded shadow-sm"
-          />
-        ))
-      ),
-      align: "center",
-    },
-    {
-      key: "productName",
-      label: "PRODUCT NAME",
-      render: (invoice) => (
-        <div className="flex flex-col">
-          {invoice?.invoiceDetails?.map((detail, index) => (
-            <p key={index} className="text-sm text-gray-700">
-              {detail.product?.name || "Unnamed Product"}
-            </p>
-          ))}
-        </div>
-      ),
-      align: "left",
-    },
-    {
-      key: "productPrice",
-      label: "SELLING PRICE",
-      render: (invoice) => (
-        invoice?.invoiceDetails?.map((detail, idx) => (
-          <p key={idx}>{(detail?.product?.sellingPrice || 0).toLocaleString()}</p>
-        )) || <p>N/A</p>
-      ),
-      align: "right",
-    },
-    {
-      key: "quantity",
-      label: "QUANTITY",
-      render: (invoice) => (
-        invoice?.invoiceDetails?.map((detail, idx) => (
-          <p key={idx}>{detail?.quantity ?? 0}</p>
-        )) || <p>N/A</p>
-      ),
-      align: "center",
-    },
+    // {
+    //   key: "productImage",
+    //   label: "PRODUCT IMAGE",
+    //   render: (invoice) => (
+    //     invoice?.invoiceDetails?.map((detail, index) => (
+    //       <Image
+    //         key={index}
+    //         src={detail.product?.images?.[0] || "https://developers.elementor.com/docs/assets/img/elementor-placeholder-image.png"}
+    //         alt="Product"
+    //         className="w-10 h-10 object-cover rounded shadow-sm"
+    //       />
+    //     ))
+    //   ),
+    //   align: "center",
+    // },
+    // {
+    //   key: "productName",
+    //   label: "PRODUCT NAME",
+    //   render: (invoice) => (
+    //     <div className="flex flex-col">
+    //       {invoice?.invoiceDetails?.map((detail, index) => (
+    //         <p key={index} className="text-sm text-gray-700">
+    //           {detail.product?.name || "Unnamed Product"}
+    //         </p>
+    //       ))}
+    //     </div>
+    //   ),
+    //   align: "left",
+    // },
+    // {
+    //   key: "productPrice",
+    //   label: "SELLING PRICE",
+    //   render: (invoice) => (
+    //     invoice?.invoiceDetails?.map((detail, idx) => (
+    //       <p key={idx}>{(detail?.product?.sellingPrice || 0).toLocaleString()}</p>
+    //     )) || <p>N/A</p>
+    //   ),
+    //   align: "right",
+    // },
+    // {
+    //   key: "quantity",
+    //   label: "QUANTITY",
+    //   render: (invoice) => (
+    //     invoice?.invoiceDetails?.map((detail, idx) => (
+    //       <p key={idx}>{detail?.quantity ?? 0}</p>
+    //     )) || <p>N/A</p>
+    //   ),
+    //   align: "center",
+    // },
     {
       key: "totalPrice",
       label: "TOTAL PRICE",
@@ -238,7 +238,7 @@ export default function InvoicePage() {
       key: "actions",
       label: "ACTION",
       render: (invoice) => (
-        <Row className="gap-2">
+        <Row className="gap-2 justify-center">
           <Eye
             size={24}
             className="cursor-pointer text-blue-500 hover:text-blue-700"
