@@ -34,7 +34,7 @@ export default function DiscountPage() {
     }),
   });
 
-  const discounts = data?.data.discounts || [];
+  const discounts = data?.data.data || [];
 
   useEffect(() => {
     if (data?.pagination) {

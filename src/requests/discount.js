@@ -1,9 +1,9 @@
 import { api } from "../constants/api.js";
 import { httpRequest } from "./index.js";
 
-export async function fetchAllDiscount({ signal, page, itemsPerPage }) {
+export async function fetchAllDiscount({ signal, page, itemsPerPage, keyword }) {
   const response = await httpRequest.get({
-    url: api.discount.getAll({ page, itemsPerPage }),
+    url: api.discount.getAll({ page, itemsPerPage, keyword }),
     signal,
   });
 

@@ -32,7 +32,7 @@ export default function CategoryPage() {
     }),
   });
 
-  const categories = data?.data.categories || [];
+  const categories = data?.data.data || [];
 
   useEffect(() => {
     if (data?.pagination) {

@@ -1,9 +1,9 @@
 import { api } from "../constants/api";
 import { httpRequest } from "./index";
 
-export async function fetchProviders({ signal }) {
+export async function fetchProviders({ signal, page, itemsPerPage, keyword }) {
   const response = await httpRequest.get({
-    url: api.provider.getAll(),
+    url: api.provider.getAll({ page, itemsPerPage, keyword }),
     signal,
   });
 

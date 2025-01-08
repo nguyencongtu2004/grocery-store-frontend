@@ -1,9 +1,9 @@
 import { api } from "../constants/api.js";
 import { httpRequest } from "./index.js";
 
-export async function fetchCategories({ signal }) {
+export async function fetchCategories({ signal, page, itemsPerPage, keyword }) {
   const response = await httpRequest.get({
-    url: api.category.getAll(),
+    url: api.category.getAll({ page, itemsPerPage, keyword }),
     signal,
   });
 
