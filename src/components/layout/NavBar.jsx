@@ -24,7 +24,7 @@ export default function NavBar({ className }) {
   }
 
   return (
-    <nav className={cn(className, "h-screen w-64 bg-gray-100 p-4")}>
+    <nav className={cn(className, "bg-gray-100 p-4 overflow-y-auto")}>
       <ul className="space-y-2">
         {filteredNavigation.map((item, index) => {
           const isSelected = location.pathname === item.route;

@@ -11,8 +11,8 @@ export default function RootPage() {
     <>
       <Header />
       <Row>
-        <NavBar className="sticky block top-24" />
-        <div className="w-full p-8">
+        <NavBar className="fixed left-0 top-24 h-[calc(100vh-6rem)]" />
+        <div className="ml-64 w-full p-8">
           <Toaster position="top-center"/>
           <Outlet />
         </div>

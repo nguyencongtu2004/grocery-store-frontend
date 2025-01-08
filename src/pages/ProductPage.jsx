@@ -62,7 +62,7 @@ export default function ProductPage() {
     {
       key: "name",
       label: "NAME",
-      render: (product) => <p>{product.name}</p>,
+      render: (product) => <p>{product.name.slice(0, 30) + (product.name.length > 30 ? "..." : "")}</p>,
     },
     {
       key: "category",
