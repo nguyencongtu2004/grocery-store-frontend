@@ -30,6 +30,15 @@ export async function createPurchaseOrder({ formData, signal }) {
   });
 }
 
+// Tạo mới Purchase Order với file excel
+export async function importPurchaseOrderExcel({ formData, signal }) {
+  return await httpRequest.postWithFiles({
+    url: api.purchaseOrder.import(),
+    data: formData,
+    signal,
+  });
+}
+
 // Cập nhật Purchase Order
 export async function updatePurchaseOrder({ id, formData, signal }) {
   return await httpRequest.putWithFiles({

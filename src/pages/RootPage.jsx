@@ -3,6 +3,7 @@ import Header from "../components/layout/Header.jsx";
 import Row from "../components/layout/Row.jsx";
 import NavBar from "../components/layout/NavBar.jsx";
 import { useScrollToTop } from "../hooks/useScrollToTop.js";
+import { Toaster } from "react-hot-toast";
 
 export default function RootPage() {
   useScrollToTop();
@@ -12,6 +13,7 @@ export default function RootPage() {
       <Row>
         <NavBar className="sticky block top-24" />
         <div className="w-full p-8">
+          <Toaster position="top-center"/>
           <Outlet />
         </div>
       </Row>

@@ -51,6 +51,7 @@ export const api = {
   purchaseOrder: {
     getAll: ({ page, itemsPerPage, keyword }) => `/purchase-orders?page=${page}&limit=${itemsPerPage}&keyword=${keyword ?? ""}`,
     create: () => "/purchase-orders",
+    import: () => "/import",
     update: ({ id }) => `/purchase-orders/${id}`,
   },
   provider: {

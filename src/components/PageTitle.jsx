@@ -10,6 +10,8 @@ export default function PageTitle({
   description,
   buttonTitle,
   onButonClick,
+  secondButtonTitle,
+  onSecondButonClick,
   className,
   isLoading,
 }) {
@@ -22,14 +24,24 @@ export default function PageTitle({
           <h1 className="text-2xl font-bold">{title}</h1>
           <p className="text-sm text-gray-500 mt-1">{description}</p>
         </div>
-        {buttonTitle && <Button
-          color="primary"
-          onClick={onButonClick}
-          startContent={<Plus size={20} />}
-          isDisabled={isLoading}
-        >
-          {buttonTitle}
-        </Button>}
+        <div className="flex gap-3">
+          {secondButtonTitle && <Button
+            color="secondary"
+            onClick={onSecondButonClick}
+            startContent={<Plus size={20} />}
+            isDisabled={isLoading}
+          >
+            {secondButtonTitle}
+          </Button>}
+          {buttonTitle && <Button
+            color="primary"
+            onClick={onButonClick}
+            startContent={<Plus size={20} />}
+            isDisabled={isLoading}
+          >
+            {buttonTitle}
+          </Button>}
+        </div>
       </Row>
       <Divider className="mb-6" />
     </Column>
@@ -41,6 +53,8 @@ PageTitle.propTypes = {
   description: PropTypes.string.isRequired,
   buttonTitle: PropTypes.string,
   onButonClick: PropTypes.func,
+  secondButtonTitle: PropTypes.string,
+  onSecondButonClick: PropTypes.func,
   className: PropTypes.string,
   isLoading: PropTypes.bool,
 };

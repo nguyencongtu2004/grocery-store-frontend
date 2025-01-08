@@ -3,7 +3,7 @@ import { ActionCell, DataTable } from "../components/DataTable";
 import PageTitle from "../components/PageTitle";
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchAllPurchaseOrders } from "../requests/purchaseOrder";
+import { fetchAllPurchaseOrders, importPurchaseOrderExcel } from "../requests/purchaseOrder";
 import AddPurchaseModal from "../components/purchaseOrder/AddPurchaseModal";
 import ViewPurchaseModal from "../components/purchaseOrder/ViewPurchaseModal";
 import EditPurchaseModal from "../components/purchaseOrder/EditPurchaseModal";
@@ -44,6 +44,33 @@ export default function PurchaseOrderPage() {
   function handleEditPurchase(purchase) {
     setSelectedPurchase(purchase);
     setIsEditModalOpen(true);
+  }
+
+  function handleImportPurchaseOrder() {
+    const sendExcelFile = async (file) => {
+      const formData = new FormData();
+      formData.append('files', file);
+      try {
+        const response = await importPurchaseOrderExcel({ formData });
+        if (response.status === 200) {
+          toast.success('Import successful');
+          refetch(); // Refresh the purchase order list
+        }
+      } catch (error) {
+        toast.error('Import failed: ' + error.message);
+      }
+    };
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.xlsx, .xls';
+    input.onchange = (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        sendExcelFile(file);
+      }
+    };
+    input.click();
   }
 
   const columns = [
@@ -140,6 +167,8 @@ export default function PurchaseOrderPage() {
         description="Manage purchase order of your store"
         buttonTitle="Add new purchase order"
         onButonClick={handleAddPurchaseOrder}
+        secondButtonTitle="Import with Excel"
+        onSecondButonClick={handleImportPurchaseOrder}
         isLoading={false}
       />
       <div>
