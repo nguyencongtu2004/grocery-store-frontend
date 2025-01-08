@@ -3,6 +3,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button } from
 import { Image as ImageIcon, Upload, X } from "lucide-react";
 import PropTypes from "prop-types";
 import { updateProduct } from "../../requests/product";
+import toast from "react-hot-toast";
 
 export default function EditProductModal({ isOpen, onClose, product, onSave }) {
   const [formData, setFormData] = useState({
@@ -92,9 +93,9 @@ export default function EditProductModal({ isOpen, onClose, product, onSave }) {
       await updateProduct(product._id, formDataToSend);
       onSave(formData);
       onClose();
+      toast.success("Product updated successfully!");
     } catch (error) {
-      console.error("Failed to update product:", error);
-      alert("Failed to update product. Please try again.");
+      toast.error("Failed to update product:", error);
     }
   };
 

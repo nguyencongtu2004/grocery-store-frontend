@@ -3,6 +3,7 @@ import { HelpCircle } from "lucide-react";
 import PropTypes from "prop-types";
 import { exportInvoicePDF } from "../../requests/invoice";
 import { formatDateTime, formatPrice } from "../../ultis/ultis";
+import toast from "react-hot-toast";
 
 export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
   const calculateDiscountAmount = (totalPrice, discount) => {
@@ -35,16 +36,16 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
             newWindow.print();
           };
         } else {
-          console.error('Không thể mở tab mới. Hãy kiểm tra cài đặt popup của trình duyệt.');
+          toast.error('Cannot open new tab. Please check your browser popup settings.');
         }
 
         // Xóa URL tạm sau một thời gian
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       } else {
-        console.error('Response không phải là file PDF');
+        toast.error('Failed to export PDF. Please try again later.');
       }
     } catch (error) {
-      console.error('Lỗi khi xuất PDF:', error);
+      toast.error('Failed to export PDF. Please try again later. ' + error.message);
     }
   }
 
@@ -160,7 +161,7 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
           )}
         </ModalBody>
         <ModalFooter>
-          <Button onClick={() => handleExport(invoice._id)} color="success" auto>
+          <Button onClick={() => handleExport(invoice._id)} color="default" auto>
             Print Invoice
           </Button>
           <Button onClick={onClose} color="primary" auto>

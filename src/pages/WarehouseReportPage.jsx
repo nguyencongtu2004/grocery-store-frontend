@@ -54,7 +54,6 @@ const WarehouseReportPage = () => {
     queryFn: ({ signal }) => importByProvider({ signal, startDate, endDate }),
   });
   const importData = importRawData?.data || {};
-  console.log('importData', importData);
 
   const { data: topSellingRawData, isLoading: isTopSellingLoading } = useQuery({
     queryKey: ['topSellingProducts', startDate, endDate],

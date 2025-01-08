@@ -5,7 +5,6 @@ import { api } from "../constants/api";
 
 export async function rootLoader({ request }) {
   const url = new URL(request.url);
-  console.log(url.pathname);
 
   const response = await httpRequest.get({ url: api.user.getInfor() });
   const role = response?.data?.user.role;

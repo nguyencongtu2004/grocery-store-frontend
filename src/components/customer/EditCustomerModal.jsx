@@ -3,6 +3,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { updateCustomer } from "../../requests/customer";
 import PropTypes from "prop-types";
+import toast from "react-hot-toast";
 
 export default function EditCustomerModal({ isOpen, onOpenChange, customer }) {
   const [name, setName] = useState("");
@@ -26,7 +27,7 @@ export default function EditCustomerModal({ isOpen, onOpenChange, customer }) {
       onOpenChange(false);
     },
     onError: (error) => {
-      console.error("Error updating customer:", error);
+      toast.error("Error updating customer:", error);
     }
   });
 

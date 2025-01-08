@@ -14,6 +14,7 @@ import { createInvoice } from "../../requests/invoice";
 import { fetchCustomers } from "../../requests/customer";
 import { fetchProduct } from "../../requests/product";
 import PropTypes from "prop-types";
+import toast from 'react-hot-toast';
 
 export default function AddInvoiceModal({ isOpen, onClose }) {
   const [productLines, setProductLines] = useState([{
@@ -81,7 +82,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
         setCustomerQuery("");
         setActiveSearchIndex(null);
       } catch (error) {
-        console.error("Error fetching initial data:", error);
+        toast.error("Error fetching initial data:", error);
       }
     };
 
@@ -167,10 +168,10 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     onSuccess: () => {
       queryClient.invalidateQueries(["invoices"]);
       onClose();
-      console.log("Invoice added successfully");
+      toast.success("Invoice added successfully");
     },
     onError: (error) => {
-      console.error("Error adding invoice:", error.message);
+      toast.error("Error adding invoice:", error.message);
     },
   });
 

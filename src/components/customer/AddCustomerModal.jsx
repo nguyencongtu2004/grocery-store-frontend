@@ -3,6 +3,7 @@ import { Modal, ModalContent, ModalHeader, ModalBody, ModalFooter, Button, Input
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { createCustomer } from "../../requests/customer";
 import PropTypes from "prop-types";
+import toast from "react-hot-toast";
 
 export default function AddCustomerModal({ isOpen, onOpenChange }) {
   const [name, setName] = useState("");
@@ -18,7 +19,7 @@ export default function AddCustomerModal({ isOpen, onOpenChange }) {
       onOpenChange(false);
     },
     onError: (error) => {
-      console.error("Error creating customer:", error);
+      toast.error("Error creating customer:", error);
     }
   });
 

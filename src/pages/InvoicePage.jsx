@@ -9,6 +9,7 @@ import AddInvoiceModal from "../components/invoice/AddInvoiceModal";
 import InvoiceDetailModal from "../components/invoice/InvoiceDetailModal";
 import Row from "../components/layout/Row";
 import { formatDateTime, formatPrice } from "../ultis/ultis";
+import toast from "react-hot-toast";
 
 export default function InvoicePage() {
   const [page, setPage] = useState(1);
@@ -117,16 +118,16 @@ export default function InvoicePage() {
             newWindow.print();
           };
         } else {
-          console.error('Cannot open new tab. Please check browser popup settings.');
+          toast.error('Cannot open new tab. Please check browser popup settings.');
         }
 
         // Clean up temporary URL
         setTimeout(() => URL.revokeObjectURL(url), 5000);
       } else {
-        console.error('Response is not a PDF file');
+        toast.error('Response is not a PDF file');
       }
     } catch (error) {
-      console.error('Error exporting PDF:', error);
+      toast.error('Error exporting PDF:', error);
     }
   }
 

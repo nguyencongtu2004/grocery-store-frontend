@@ -39,8 +39,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
         setCategories(categoriesRes?.data?.categories || []);
         resetForm();
       } catch (error) {
-        console.error("Error fetching initial data:", error);
-        toast.error("Unable to load initial data");
+        toast.error("Unable to load initial data", error);
       }
     };
     fetchInitialData();
@@ -91,8 +90,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
       updatedLines[productIndex].imageFiles = files;
       setProductLines(updatedLines);
     } catch (error) {
-      console.error("Error handling images:", error);
-      toast.error("Unable to process images");
+      toast.error("Unable to process images", error);
     }
   };
 
@@ -252,8 +250,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
         toast.error("Unable to create purchase order");
       }
     } catch (error) {
-      console.error("Error creating purchase order:", error);
-      toast.error("An error occurred while creating purchase order");
+      toast.error("An error occurred while creating purchase order", error);
     } finally {
       setIsSubmitting(false);
     }

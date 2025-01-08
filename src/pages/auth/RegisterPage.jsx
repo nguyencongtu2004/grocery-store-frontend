@@ -43,8 +43,6 @@ export default function RegisterPage() {
 
     if (!isValid) return;
 
-    console.log(data);
-
     // xử lý với server
     const response = await registerUser({
       data,

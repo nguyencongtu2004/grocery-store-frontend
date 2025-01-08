@@ -20,9 +20,6 @@ export default function ViewPurchaseModal({ isOpen, onClose, purchaseOrder }) {
     return (detail.importPrice || 0) * (detail.stockQuantity || 0);
   };
 
-  console.log(purchaseOrder);
-  
-
   return (
     <Modal
       isOpen={isOpen}

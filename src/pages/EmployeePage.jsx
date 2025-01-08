@@ -25,7 +25,6 @@ export default function EmployeePage() {
   });
 
   const employees = data?.data || [];
-  console.log(employees);
 
   useEffect(() => {
     if (data?.data?.pagination) {
