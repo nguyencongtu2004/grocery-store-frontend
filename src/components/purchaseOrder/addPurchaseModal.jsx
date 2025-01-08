@@ -36,7 +36,7 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
           fetchCategories({}),
         ]);
         setProviders(providersRes?.data || []);
-        setCategories(categoriesRes?.data?.categories || []);
+        setCategories(categoriesRes?.data?.data || []);
         resetForm();
       } catch (error) {
         toast.error("Unable to load initial data", error);
