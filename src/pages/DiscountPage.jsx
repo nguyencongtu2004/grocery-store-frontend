@@ -11,6 +11,8 @@ import DiscountDetailModal from "../components/discount/DiscountDetailModal";
 import DeleteConfirmModal from "../components/discount/DeleteConfirmModal";
 import { Tag } from 'lucide-react';
 import { formatDateTime, formatPrice } from "../ultis/ultis";
+import { getUserId } from "../ultis/auth";
+import { fetchUser } from "../requests/user";
 
 export default function DiscountPage() {
   const [page, setPage] = useState(1);
@@ -23,6 +25,12 @@ export default function DiscountPage() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const itemsPerPage = 1000;
+
+  const { data: userData, isLoading: userLoading } = useQuery({
+    queryKey: ["user", getUserId()],
+    queryFn: fetchUser,
+  });
+  const role = userData?.data?.user.role;
 
   const { data, isLoading } = useQuery({
     queryKey: ["discount", page, itemsPerPage, debouncedKeyword],
@@ -102,8 +110,8 @@ export default function DiscountPage() {
       render: (discount) => (
         <ActionCell
           onView={() => handleDiscountDetail(discount)}
-          onEdit={() => handleEditDiscount(discount)}
-          onDelete={() => handleDeleteDiscount(discount)}
+          onEdit={role === "manager" ? () => handleEditDiscount(discount) : null}
+          onDelete={role === "manager" ? () => handleDeleteDiscount(discount) : null}
         />
       ),
       align: "center"
@@ -139,9 +147,9 @@ export default function DiscountPage() {
       <PageTitle
         title="Discounts Management"
         description="Manage your discount codes"
-        buttonTitle="Add discount"
+        buttonTitle={role === "manager" && "Add discount"}
         onButonClick={handleAddDiscount}
-        isLoading={isLoading}
+        isLoading={userLoading}
       />
 
       <SearchInput

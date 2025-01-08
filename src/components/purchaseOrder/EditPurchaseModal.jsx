@@ -24,7 +24,7 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
           fetchCategories({})
         ]);
         setProviders(providersRes?.data || []);
-        setCategories(categoriesRes?.data?.categories || []);
+        setCategories(categoriesRes?.data?.data || []);
 
         // Initialize form with purchase order data if available
         if (purchaseOrder) {
@@ -304,6 +304,7 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
       onClose={onClose}
       size="2xl"
       placement="center"
+      scrollBehavior="outside"
       classNames={{
         body: "p-5",
         backdrop: "bg-[#292f46]/50 backdrop-opacity-40",

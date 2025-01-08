@@ -200,7 +200,8 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
       isOpen={isOpen}
       onClose={onClose}
       size="2xl"
-      scrollBehavior="inside"
+      placement="center"
+      scrollBehavior="outside"
     >
       <ModalContent>
         <form onSubmit={handleSubmit}>
@@ -224,7 +225,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                   className="w-full"
                 />
                 {showCustomerDropdown && filteredCustomers.length > 0 && (
-                  <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                  <div className="absolute z-20 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-auto">
                     {filteredCustomers.map((customer) => (
                       <div
                         key={customer._id}
@@ -264,7 +265,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                       className="w-full"
                     />
                     {activeSearchIndex === index && filteredProducts.length > 0 && (
-                      <div className="absolute z-10 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-auto">
+                      <div className="absolute z-20 w-full mt-1 bg-white rounded-lg shadow-lg border border-gray-200 max-h-60 overflow-auto">
                         {filteredProducts.map((product) => (
                           <div
                             key={product._id}

@@ -274,11 +274,12 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
       onClose={onClose}
       size="2xl"
       placement="center"
+      scrollBehavior="outside"
       classNames={{
         body: "p-5",
         backdrop: "bg-[#292f46]/50 backdrop-opacity-40",
         base: "border-[#292f46] bg-white dark:bg-[#19172c] rounded-lg",
-        closeButton: "hover:bg-white/5 active:bg-white/10",
+        closeButton: "hover:bg-white/5 active:bg-white/10"
       }}
     >
       <ModalContent>

@@ -13,7 +13,7 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
   };
 
   const discountAmount = calculateDiscountAmount(invoice?.totalPrice, invoice?.discount);
-  const finalPrice = (invoice?.totalPrice || 0) - discountAmount;
+  const finalPrice = (invoice?.totalPrice || 0);
 
   async function handleExport(id) {
     try {

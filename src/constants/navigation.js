@@ -66,7 +66,7 @@ export const navigation = [
     route: "/discounts",
     icon: Percent,
     element: DiscountPage,
-    role: ["manager"],
+    role: ["manager", "sale"],
   },
   {
     title: "Provider Management",
