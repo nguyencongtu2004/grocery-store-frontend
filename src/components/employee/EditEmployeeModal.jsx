@@ -3,6 +3,7 @@ import { Mail, Lock, User, Briefcase, Phone, MapPin } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { updateEmployee } from "../../requests/employee";
 import { queryClient } from "../../requests";
+import toast from "react-hot-toast";
 
 export default function EditEmployeeModal({ isOpen, onClose, employee }) {
   async function handleSubmit(e) {
@@ -23,11 +24,12 @@ export default function EditEmployeeModal({ isOpen, onClose, employee }) {
       if (response.status === 200) {
         queryClient.invalidateQueries('employees');
         onClose();
+        toast.success('Update employee successfully');
       } else {
-        alert('Failed to update employee: ' + response.data.message);
+        toast.error('Failed to update employee: ' + response.data.message);
       }
     } catch (error) {
-      alert('Error updating employee: ' + error.message);
+      toast.error('Error updating employee: ' + error.message);
     }
   }
 

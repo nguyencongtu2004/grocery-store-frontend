@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { queryClient } from "../../requests";
 import { useState } from "react";
 import { deleteDiscount } from "../../requests/discount";
+import toast from "react-hot-toast";
 
 export default function DeleteConfirmModal({ isOpen, onClose, discount }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -15,11 +16,12 @@ export default function DeleteConfirmModal({ isOpen, onClose, discount }) {
       if (response.status === 200) {
         queryClient.invalidateQueries('discounts');
         onClose();
+        toast.success('Delete discount successfully');
       } else {
-        alert('Failed to delete discount: ' + response.data.message);
+        toast.error('Failed to delete discount: ' + response.data.message);
       }
     } catch (error) {
-      alert('Error deleting discount: ' + error.message);
+      toast.error('Error deleting discount: ' + error.message);
     } finally {
       setIsDeleting(false);
     }

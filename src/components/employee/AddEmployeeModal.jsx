@@ -3,6 +3,7 @@ import { Mail, Lock, User, Briefcase, Phone, MapPin } from 'lucide-react';
 import PropTypes from 'prop-types';
 import { createEmployee } from "../../requests/employee";
 import { queryClient } from "../../requests";
+import toast from "react-hot-toast";
 
 export default function AddEmployeeModal({ isOpen, onClose }) {
   async function handleSubmit(e) {
@@ -20,8 +21,9 @@ export default function AddEmployeeModal({ isOpen, onClose }) {
     if (response.status === 201) {
       queryClient.invalidateQueries('employees');
       onClose();
+      toast.success('Add employee successfully');
     } else {
-      alert('Failed to add employee: ' + response.data.message);
+      toast.error('Failed to add employee: ' + response.data.message);
     }
 
     onClose();

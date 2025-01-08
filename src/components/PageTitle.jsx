@@ -26,7 +26,7 @@ export default function PageTitle({
         </div>
         <div className="flex gap-3">
           {secondButtonTitle && <Button
-            color="secondary"
+            color="success"
             onClick={onSecondButonClick}
             startContent={<Plus size={20} />}
             isDisabled={isLoading}

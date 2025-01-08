@@ -252,6 +252,7 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
         toast.success("Purchase order updated successfully");
         onSuccess?.();
         onClose();
+        toast.success("Update purchase order successfully");
       } else {
         toast.error("Failed to update purchase order");
       }

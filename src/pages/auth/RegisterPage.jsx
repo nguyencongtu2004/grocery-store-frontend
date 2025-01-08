@@ -161,7 +161,7 @@ export default function RegisterPage() {
               Register
             </Button>
           </div>
-        </Form>        
+        </Form>
         <div />
 
         <div className="flex flex-col gap-2">

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { queryClient } from "../../requests";
 import { useState } from "react";
 import { deleteCategory } from "../../requests/category";
+import toast from "react-hot-toast";
 
 export default function DeleteConfirmModal({ isOpen, onClose, category }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -14,12 +15,13 @@ export default function DeleteConfirmModal({ isOpen, onClose, category }) {
 
       if (response.status === 200) {
         queryClient.invalidateQueries('categories');
+        toast.success('Delete category successfully')
         onClose();
       } else {
-        alert('Failed to delete category: ' + response.data.message);
+        toast.error('Failed to delete category: ' + response.data.message)
       }
     } catch (error) {
-      alert('Error deleting category: ' + error.message);
+      toast.error('Error deleting category: ' + error.message);
     } finally {
       setIsDeleting(false);
     }

@@ -53,7 +53,7 @@ export default function PurchaseOrderPage() {
       try {
         const response = await importPurchaseOrderExcel({ formData });
         if (response.status === 200) {
-          toast.success('Import successful');
+          toast.success('Import purchase order successful');
           refetch(); // Refresh the purchase order list
         }
       } catch (error) {

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { deleteEmployee } from "../../requests/employee";
 import { queryClient } from "../../requests";
 import { useState } from "react";
+import toast from "react-hot-toast";
 
 export default function DeleteConfirmModal({ isOpen, onClose, employee }) {
   const [isDeleting, setIsDeleting] = useState(false);
@@ -15,11 +16,12 @@ export default function DeleteConfirmModal({ isOpen, onClose, employee }) {
       if (response.status === 200) {
         queryClient.invalidateQueries('employees');
         onClose();
+        toast.success('Delete employee successfully');
       } else {
-        alert('Failed to delete employee: ' + response.data.message);
+        toast.error('Failed to delete employee: ' + response.data.message);
       }
     } catch (error) {
-      alert('Error deleting employee: ' + error.message);
+      toast.error('Error deleting employee: ' + error.message);
     } finally {
       setIsDeleting(false);
     }
