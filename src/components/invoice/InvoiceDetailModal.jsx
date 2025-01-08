@@ -51,7 +51,8 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
 
   async function handleCreateQr(id) {
     if (invoice?.paymentData) {
-      window.open(invoice.paymentData.payUrl, '_blank');
+      // window.open(invoice.paymentData.payUrl, '_blank');
+      onClose(invoice.paymentData.payUrl);
       return;
     }
     try {
@@ -59,7 +60,8 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
       if (response.status === 200) {
         toast.success('Create QR code successfully');
         const qrCodeUrl = response.data.data.payUrl;
-        window.open(qrCodeUrl, '_blank');
+        onClose(qrCodeUrl);
+        // window.open(qrCodeUrl, '_blank');
       } else {
         toast.error('Failed to create QR code: ' + response.data.message);
       }
@@ -178,10 +180,11 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
           )}
         </ModalBody>
         <ModalFooter>
-          <Button onClick={() => handleCreateQr(invoice._id)} color="default" auto>
-            <QrCode size={16} />
-            Create QR
-          </Button>
+          {
+            <Button onClick={() => handleCreateQr(invoice._id)} color="default" auto>
+              <QrCode size={16} />
+              Pay with QR
+            </Button>}
           <Button onClick={() => handleExport(invoice._id)} color="default" auto>
             <Printer size={16} />
             Print Invoice
