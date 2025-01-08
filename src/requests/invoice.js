@@ -27,6 +27,15 @@ export async function exportInvoicePDF({ id, signal }) {
   return await httpRequest.get({
     url: api.invoice.exportPDF({ id }),
     signal,
-    responseType: 'arraybuffer', 
+    responseType: 'arraybuffer',
+  });
+}
+
+// Tạo qr
+export async function createQr({ id, signal }) {
+  return await httpRequest.post({
+    url: api.invoice.createQr(),
+    data: { id },
+    signal,
   });
 }

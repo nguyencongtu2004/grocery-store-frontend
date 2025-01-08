@@ -47,6 +47,7 @@ export const api = {
       `/invoices?page=${page}&limit=${itemsPerPage}&search=${searchTerm ?? ""}&sortBy=${sortBy ?? ""}&order=${order ?? ""}`,
     create: () => "/invoices",
     exportPDF: ({ id }) => `/invoices/${id}/export`,
+    createQr: () => "/invoices/momo",
   },
   purchaseOrder: {
     getAll: ({ page, itemsPerPage, keyword }) => `/purchase-orders?page=${page}&limit=${itemsPerPage}&keyword=${keyword ?? ""}`,
