@@ -109,16 +109,16 @@ export default function PurchaseOrderPage() {
     //   ),
     //   align: "left",
     // },
-    {
-      key: "importPrice",
-      label: "IMPORT PRICE",
-      render: (product) => (
-        product?.purchaseDetail?.map((detail, idx) => (
-          <p key={idx}>{detail?.importPrice ? formatPrice(detail?.importPrice) : "N/A"}</p>
-        )) || <p>N/A</p>
-      ),
-      align: "center",
-    },
+    // {
+    //   key: "importPrice",
+    //   label: "IMPORT PRICE",
+    //   render: (product) => (
+    //     product?.purchaseDetail?.map((detail, idx) => (
+    //       <p key={idx}>{detail?.importPrice ? formatPrice(detail?.importPrice) : "N/A"}</p>
+    //     )) || <p>N/A</p>
+    //   ),
+    //   align: "center",
+    // },
     // {
     //   key: "expireDate",
     //   label: "EXPIRE DATE",

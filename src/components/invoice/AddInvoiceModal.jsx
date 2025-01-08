@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Modal,
   ModalContent,
@@ -15,6 +15,7 @@ import { fetchCustomers } from "../../requests/customer";
 import { fetchProduct } from "../../requests/product";
 import PropTypes from "prop-types";
 import toast from 'react-hot-toast';
+import Column from "../layout/Column";
 
 export default function AddInvoiceModal({ isOpen, onClose }) {
   const [productLines, setProductLines] = useState([{
@@ -25,8 +26,6 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     quantity: 1
   }]);
 
-  const [customers, setCustomers] = useState([]);
-  const [allProducts, setAllProducts] = useState([]);
   const [filteredCustomers, setFilteredCustomers] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -34,59 +33,68 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
   const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
   const [activeSearchIndex, setActiveSearchIndex] = useState(null);
   const customerRef = useRef(null);
+  const customerSearchTimer = useRef(null);
+  const productSearchTimer = useRef(null);
   const queryClient = useQueryClient();
 
-  const extractArrayData = (response, path) => {
-    if (!response) return [];
-    if (Array.isArray(response)) return response;
-
-    const pathParts = path.split('.');
-    let data = response;
-
-    for (const part of pathParts) {
-      data = data?.[part];
-      if (Array.isArray(data)) return data;
-      if (!data) return [];
+  // Debounced search functions
+  const debouncedCustomerSearch = useCallback(async (query) => {
+    if (!query.trim()) {
+      setFilteredCustomers([]);
+      return;
     }
+    try {
+      const response = await fetchCustomers({
+        keyword: query,
+        page: 1,
+        itemsPerPage: 10
+      });
+      const customers = response?.data || [];
+      setFilteredCustomers(customers);
+    } catch (error) {
+      console.error("Error searching customers:", error);
+      toast.error("Error searching customers");
+    }
+  }, []);
 
-    return [];
-  };
+  const debouncedProductSearch = useCallback(async (query) => {
+    if (!query.trim()) {
+      setFilteredProducts([]);
+      return;
+    }
+    try {
+      const response = await fetchProduct({
+        keyword: query,
+        page: 1,
+        itemsPerPage: 10
+      });
+      const products = response?.data?.data || response?.data || [];
+      setFilteredProducts(products);
+    } catch (error) {
+      console.error("Error searching products:", error);
+      toast.error("Error searching products");
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchInitialData = async () => {
+    const resetForm = () => {
       if (!isOpen) return;
 
-      try {
-        const [customersRes, productsRes] = await Promise.all([
-          fetchCustomers({ page: 1, itemsPerPage: 100 }),
-          fetchProduct({}),
-        ]);
-
-        const customersList = extractArrayData(customersRes, 'data');
-        const productsList = extractArrayData(productsRes, 'data.data') ||
-          extractArrayData(productsRes, 'data') ||
-          [];
-
-        setCustomers(customersList);
-        setAllProducts(productsList);
-
-        // Reset form
-        setProductLines([{
-          category: "",
-          categoryId: "",
-          product: "",
-          productId: "",
-          quantity: 1
-        }]);
-        setSelectedCustomer(null);
-        setCustomerQuery("");
-        setActiveSearchIndex(null);
-      } catch (error) {
-        toast.error("Error fetching initial data:", error);
-      }
+      setProductLines([{
+        category: "",
+        categoryId: "",
+        product: "",
+        productId: "",
+        quantity: 1
+      }]);
+      setSelectedCustomer(null);
+      setCustomerQuery("");
+      setActiveSearchIndex(null);
+      setFilteredCustomers([]);
+      setFilteredProducts([]);
     };
 
-    fetchInitialData();
+    resetForm();
   }, [isOpen]);
 
   useEffect(() => {
@@ -102,18 +110,19 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
 
   // Customer search handling
   useEffect(() => {
-    if (customerQuery.trim() === "") {
-      setFilteredCustomers([]);
-      setSelectedCustomer(null);
-      return;
+    if (customerSearchTimer.current) {
+      clearTimeout(customerSearchTimer.current);
     }
+    customerSearchTimer.current = setTimeout(() => {
+      debouncedCustomerSearch(customerQuery);
+    }, 300);
 
-    const filtered = customers.filter(customer =>
-      customer.name.toLowerCase().includes(customerQuery.toLowerCase())
-    );
-    setFilteredCustomers(filtered);
-    setShowCustomerDropdown(true);
-  }, [customerQuery, customers]);
+    return () => {
+      if (customerSearchTimer.current) {
+        clearTimeout(customerSearchTimer.current);
+      }
+    };
+  }, [customerQuery, debouncedCustomerSearch]);
 
   // Product search handling
   const handleProductSearch = (index, query) => {
@@ -123,17 +132,14 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     updatedLines[index].category = "";
     updatedLines[index].categoryId = "";
     setProductLines(updatedLines);
-
-    if (query.trim() === "") {
-      setFilteredProducts([]);
-      return;
-    }
-
-    const filtered = allProducts.filter(product =>
-      product.name.toLowerCase().includes(query.toLowerCase())
-    );
-    setFilteredProducts(filtered);
     setActiveSearchIndex(index);
+
+    if (productSearchTimer.current) {
+      clearTimeout(productSearchTimer.current);
+    }
+    productSearchTimer.current = setTimeout(() => {
+      debouncedProductSearch(query);
+    }, 300);
   };
 
   const handleProductSelect = (index, product) => {
@@ -213,7 +219,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                 <Input
                   startContent={<Search size={18} />}
                   label="Search Customer (Optional)"
-                  placeholder="Start typing customer name..."
+                  placeholder="Search by customer's name, phone number, or address..."
                   value={customerQuery}
                   onChange={(e) => {
                     setCustomerQuery(e.target.value);
@@ -236,7 +242,15 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                           setShowCustomerDropdown(false);
                         }}
                       >
-                        {customer.name}
+                        <Column>
+                          <div className="font-medium">{customer.name}</div>
+                          {customer.phone && <div className="text-sm text-gray-500">
+                            Phone: {customer.phone}
+                          </div>}
+                          {customer.address && <div className="text-sm text-gray-500">
+                            Address: {customer.address}
+                          </div>}
+                        </Column>
                       </div>
                     ))}
                   </div>
@@ -259,7 +273,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                     <Input
                       startContent={<Search size={18} />}
                       label="Search Product"
-                      placeholder="Start typing product name..."
+                      placeholder="Search by product name..."
                       value={line.product}
                       onChange={(e) => handleProductSearch(index, e.target.value)}
                       className="w-full"
