@@ -30,21 +30,13 @@ export default function InvoicePage() {
     keepPreviousData: true,
   });
 
-  // Process and calculate totalPrice for each invoice
+  // Process data from API
   const processedInvoices = useMemo(() => {
     const rawInvoices = data?.data?.data || [];
-    return rawInvoices.map((invoice) => {
-      const totalPrice = invoice.invoiceDetails.reduce((sum, detail) => {
-        const price = detail?.product?.sellingPrice || 0;
-        const quantity = detail?.quantity || 0;
-        return sum + price * quantity;
-      }, 0);
-      return {
-        ...invoice,
-        totalPrice,
-        searchableId: invoice._id?.toString().toLowerCase() || ""
-      };
-    });
+    return rawInvoices.map((invoice) => ({
+      ...invoice,
+      searchableId: invoice._id?.toString().toLowerCase() || ""
+    }));
   }, [data]);
 
   // Filter and sort invoices

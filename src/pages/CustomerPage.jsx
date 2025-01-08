@@ -52,7 +52,7 @@ export default function CustomerPage() {
   const columns = [
     {
       key: "_id",
-      label: "STT",
+      label: "INDEX",
       render: (customer) => (page - 1) * itemsPerPage + (customers.indexOf(customer) + 1),
       align: "center"
     },

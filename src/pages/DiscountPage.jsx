@@ -54,7 +54,7 @@ export default function DiscountPage() {
   const columns = [
     {
       key: "_id",
-      label: "STT",
+      label: "INDEX",
       render: (discount) => (page - 1) * itemsPerPage + (discounts.indexOf(discount) + 1),
       align: "center"
     },

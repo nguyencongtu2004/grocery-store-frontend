@@ -52,7 +52,7 @@ export default function CategoryPage() {
   const columns = [
     {
       key: "_id",
-      label: "STT",
+      label: "INDEX",
       render: (category) => (page - 1) * itemsPerPage + (categories.indexOf(category) + 1),
       align: "center"
     },

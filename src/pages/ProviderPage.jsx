@@ -52,7 +52,7 @@ export default function ProviderPage() {
   const columns = [
     {
       key: "_id",
-      label: "STT",
+      label: "INDEX",
       render: (provider) => (page - 1) * itemsPerPage + (providers.indexOf(provider) + 1),
       align: "center"
     },

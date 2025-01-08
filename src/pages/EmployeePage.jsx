@@ -36,7 +36,7 @@ export default function EmployeePage() {
   const columns = [
     {
       key: "_id",
-      label: "STT",
+      label: "INDEX",
       render: (employee) => (page - 1) * itemsPerPage + (employees.indexOf(employee) + 1),
       align: "center"
     },

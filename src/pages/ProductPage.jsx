@@ -43,7 +43,7 @@ export default function ProductPage() {
   const columns = [
     {
       key: "_id",
-      label: "STT",
+      label: "INDEX",
       render: (product) => (page - 1) * itemsPerPage + (products.indexOf(product) + 1),
       align: "center",
     },
