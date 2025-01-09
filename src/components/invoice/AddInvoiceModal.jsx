@@ -7,6 +7,8 @@ import {
   ModalFooter,
   Button,
   Input,
+  Select,
+  SelectItem,
 } from "@nextui-org/react";
 import { Trash, Search } from "lucide-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,8 +18,22 @@ import { fetchProduct } from "../../requests/product";
 import PropTypes from "prop-types";
 import toast from 'react-hot-toast';
 import Column from "../layout/Column";
+import { useQuery } from "@tanstack/react-query";
+import { fetchAllDiscount } from '../../requests/discount';
 
 export default function AddInvoiceModal({ isOpen, onClose }) {
+  const { data: voucherData} = useQuery({
+    queryKey: ["discount", 1, 100, ""],
+    queryFn: ({ signal }) => fetchAllDiscount({
+      signal,
+      page: 1,
+      itemsPerPage: 100,
+      keyword: ""
+    }),
+  });
+  const discounts = voucherData?.data.data || [];
+  console.log('discounts', discounts);
+
   const [productLines, setProductLines] = useState([{
     category: "",
     categoryId: "",
@@ -36,6 +52,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
   const customerSearchTimer = useRef(null);
   const productSearchTimer = useRef(null);
   const queryClient = useQueryClient();
+  const [selectedDiscount, setSelectedDiscount] = useState(null);
 
   // Debounced search functions
   const debouncedCustomerSearch = useCallback(async (query) => {
@@ -92,6 +109,7 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
       setActiveSearchIndex(null);
       setFilteredCustomers([]);
       setFilteredProducts([]);
+      setSelectedDiscount(null);
     };
 
     resetForm();
@@ -191,7 +209,8 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
     }
 
     const requestData = {
-      customer: selectedCustomer?._id || null,  // This will be null when no customer is selected
+      customer: selectedCustomer?._id || null,
+      discountId: selectedDiscount || null,
       invoiceDetails: productLines.map((line) => ({
         product: line.productId,
         quantity: parseInt(line.quantity, 10),
@@ -265,6 +284,52 @@ export default function AddInvoiceModal({ isOpen, onClose }) {
                   </p>
                 </div>
               )}
+
+              {/* Discount Selection */}
+              <Select
+                label="Select Voucher (Optional)"
+                placeholder="Choose a voucher"
+                selectedKeys={selectedDiscount ? [selectedDiscount] : []}
+                onChange={(e) => {
+                  console.log(e.target.value);
+                  setSelectedDiscount(e.target.value)}}
+                renderValue={(items) => {
+                  const selectedVoucher = discounts.find(d => d._id === selectedDiscount);
+                  return selectedVoucher ? (
+                    <div className="flex flex-col">
+                      <span>{selectedVoucher.name} ({selectedVoucher.code})</span>
+                    </div>
+                  ) : null;
+                }}
+                className="w-full"
+              >
+                {discounts.map((discount) => {
+                  const isExpired = new Date(discount.expireDate) < new Date();
+                  const isUsageLimitReached = discount.usageLimit !== 0 && discount.used >= discount.usageLimit;
+                  const isDisabled = isExpired || isUsageLimitReached;
+                  
+                  return (
+                    <SelectItem 
+                      key={discount._id} 
+                      value={discount._id}
+                      isDisabled={isDisabled}
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-medium">{discount.name} ({discount.code})</span>
+                        <span className="text-small text-default-500">
+                          {discount.discountInPercent}% off - Min order: {discount.minOrderValue.toLocaleString()}đ
+                        </span>
+                        {isExpired && (
+                          <span className="text-small text-danger">Expired</span>
+                        )}
+                        {isUsageLimitReached && (
+                          <span className="text-small text-danger">Usage limit reached</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  );
+                })}
+              </Select>
 
               {/* Product Lines */}
               {productLines.map((line, index) => (

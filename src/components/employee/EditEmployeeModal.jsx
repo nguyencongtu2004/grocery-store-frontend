@@ -4,22 +4,20 @@ import PropTypes from 'prop-types';
 import { updateEmployee } from "../../requests/employee";
 import { queryClient } from "../../requests";
 import toast from "react-hot-toast";
+import { useState } from 'react';
 
 export default function EditEmployeeModal({ isOpen, onClose, employee }) {
+  const [isLoading, setIsLoading] = useState(false);
+
   async function handleSubmit(e) {
     e.preventDefault();
+    setIsLoading(true);
     const formData = new FormData(e.target);
-    
+
     try {
-      const response = await updateEmployee({
-        id: employee._id,
-        email: formData.get('email'),
-        password: formData.get('password'),
-        name: formData.get('name'),
-        role: formData.get('role'),
-        phone: formData.get('phone'),
-        address: formData.get('address')
-      });
+      formData.append('id', employee._id);
+
+      const response = await updateEmployee({ formData });
 
       if (response.status === 200) {
         queryClient.invalidateQueries('employees');
@@ -30,6 +28,8 @@ export default function EditEmployeeModal({ isOpen, onClose, employee }) {
       }
     } catch (error) {
       toast.error('Error updating employee: ' + error.message);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -47,6 +47,13 @@ export default function EditEmployeeModal({ isOpen, onClose, employee }) {
           </ModalHeader>
           <ModalBody>
             <div className="grid gap-4">
+              <Input
+                type="file"
+                name="files"
+                label="Profile Image"
+                accept="image/*"
+                description="Select employee profile image"
+              />
               <Input
                 autoFocus
                 name="email"
@@ -112,10 +119,10 @@ export default function EditEmployeeModal({ isOpen, onClose, employee }) {
           </ModalBody>
           <ModalFooter>
             <Button color="danger" variant="light" onPress={onClose}>
-              Cancel
+              Close
             </Button>
-            <Button color="primary" type="submit">
-              Update Employee
+            <Button color="primary" type="submit" isLoading={isLoading}>
+              Save
             </Button>
           </ModalFooter>
         </form>

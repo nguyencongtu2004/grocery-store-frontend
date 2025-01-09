@@ -14,6 +14,7 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
 
   const discountAmount = calculateDiscountAmount(invoice?.totalPrice, invoice?.discount);
   const finalPrice = (invoice?.totalPrice || 0);
+  const priceBeforeDiscount = (invoice?.totalPrice || 0) + discountAmount;
 
   async function handleExport(id) {
     try {
@@ -105,7 +106,7 @@ export default function InvoiceDetailModal({ isOpen, onClose, invoice }) {
                   <p>
                     <strong>Subtotal: </strong>
                     <span className="text-gray-600">
-                      {formatPrice(invoice.totalPrice || 0)}
+                      {formatPrice(priceBeforeDiscount)}
                     </span>
                   </p>
 

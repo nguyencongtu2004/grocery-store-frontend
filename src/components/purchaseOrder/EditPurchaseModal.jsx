@@ -480,7 +480,7 @@ export default function EditPurchaseModal({ isOpen, onClose, onSuccess, purchase
 
                     <Input
                       label="Expiration Date"
-                      type="date"
+                      type="datetime-local"
                       variant="bordered"
                       value={line.expireDate}
                       onChange={(e) => handleInputChange(productIndex, "expireDate", e.target.value)}

@@ -27,20 +27,11 @@ export async function createEmployee({ email, password, name, role, phone, addre
   });
 }
 
-export async function updateEmployee({ id, email, password, name, role, phone, address, signal }) {
-  const data = {
-    id,
-    email,
-    password,
-    name,
-    role,
-    phone,
-    address
-  }
-
-  return await httpRequest.put({
+export async function updateEmployee({ formData, signal }) {
+  const id = formData.get('id');
+  return await httpRequest.putWithFiles({
     url: api.employee.updateEmployee({ id }),
-    data,
+    data: formData,
     signal,
   });
 }

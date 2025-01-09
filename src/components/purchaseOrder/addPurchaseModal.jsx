@@ -545,13 +545,13 @@ export default function AddPurchaseModal({ isOpen, onClose, onSuccess }) {
 
                     <Input
                       label="Expire Date"
-                      type="date"
+                      type="datetime-local"
                       variant="bordered"
                       value={line.expireDate}
                       onChange={(e) => handleInputChange(productIndex, "expireDate", e.target.value)}
                       color={errors[`expireDate-${productIndex}`] ? "danger" : "default"}
                       errorMessage={errors[`expireDate-${productIndex}`]}
-                      min={new Date().toISOString().split('T')[0]}
+                      min={new Date().toISOString().slice(0, 16)}
                     />
 
                     <div className="col-span-2">

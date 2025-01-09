@@ -26,6 +26,8 @@ export async function loginUser({ data, signal }) {
     signal,
   });
   if (response.status === 200) {
+    console.log('token', response.data.token);
+    
     if (response.data.token) setAuthToken(response.data.token);
     if (response.data.user.id) setUserId(response.data.user.id);
   }
