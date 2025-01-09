@@ -54,14 +54,14 @@ const RevenueReportPage = () => {
   });
   const salesData = salesRawData?.data || {};
 
-  const formatChartData = (data) => {
-    if (!data?.chartData) return [];
-    const { labels, revenue, profit, sales } = data.chartData;
-    return labels.map((label, index) => ({
+  const formatChartData = () => {
+    if (!revenueData?.chartData?.labels) return [];
+    
+    return revenueData.chartData.labels.map((label, index) => ({
       name: new Intl.DateTimeFormat('vi-VN', { year: 'numeric', month: 'short', day: '2-digit' }).format(new Date(label)),
-      revenue: revenue?.[index] || 0,
-      profit: profit?.[index] || 0,
-      sales: sales?.[index] || 0,
+      revenue: revenueData.chartData.revenue?.[index] || 0,
+      profit: profitData.chartData.profit?.[index] || 0,
+      sales: salesData.chartData.sales?.[index] || 0,
     }));
   };
 
@@ -113,7 +113,7 @@ const RevenueReportPage = () => {
 
           <div className="h-[400px]">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={formatChartData(revenueData)}>
+              <LineChart data={formatChartData()}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="name" />
                 <YAxis />
@@ -125,18 +125,18 @@ const RevenueReportPage = () => {
                   stroke="#8884d8"
                   name="Revenue"
                 />
-                <Line
+                {/* <Line
                   type="monotone"
                   dataKey="profit"
                   stroke="#82ca9d"
                   name="Profit"
-                />
-                <Line
+                /> */}
+                {/* <Line
                   type="monotone"
                   dataKey="sales"
                   stroke="#ffc658"
                   name="Sales"
-                />
+                /> */}
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -150,14 +150,14 @@ const RevenueReportPage = () => {
                 </p>
               </CardBody>
             </Card>
-            <Card className="flex-1">
+            {/* <Card className="flex-1">
               <CardBody>
                 <h4 className="text-lg font-medium">Total Profit</h4>
                 <p className="text-2xl font-bold mt-2">
                   {profitData?.totalProfit ? formatPrice(profitData?.totalProfit) : '-'}
                 </p>
               </CardBody>
-            </Card>
+            </Card> */}
             <Card className="flex-1">
               <CardBody>
                 <h4 className="text-lg font-medium">Best Sellers</h4>
